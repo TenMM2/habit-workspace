@@ -11,3 +11,4 @@ React + Vite + TypeScript + Tailwind + Firebase (Auth, Firestore, Storage).
 
 ## Estado
 - Fase 1: estructura, tema oscuro/claro, Firebase, reglas, login/registro/Google, rutas protegidas ✔
+- Fase 2: layout con sidebar colapsable, buscador Ctrl+K, dashboard, calendario y páginas de hábitos (banner, avatar, reglas, tracker) ✔

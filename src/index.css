@@ -48,6 +48,9 @@
   .btn {
     @apply inline-flex items-center justify-center gap-2 rounded-md border border-line px-4 py-2 text-sm font-medium transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50;
   }
+  .bg-accent-soft {
+    background-color: color-mix(in srgb, var(--accent) 22%, transparent);
+  }
   .btn-primary {
     @apply border-transparent bg-accent text-white hover:bg-accent hover:brightness-110;
   }
