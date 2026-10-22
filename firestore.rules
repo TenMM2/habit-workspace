@@ -1,0 +1,51 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // Perfil del usuario: users/{uid}
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['displayName', 'email', 'photoURL', 'bannerURL', 'plan', 'createdAt'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 80
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.plan in ['free', 'pro'];
+
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['displayName', 'photoURL', 'bannerURL', 'plan'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 80
+        && request.resource.data.plan in ['free', 'pro'];
+
+      allow delete: if isOwner(uid);
+
+      // Lo que cuelga del usuario es solo suyo. Los datos están anidados bajo users/{uid},
+      // así que nadie más puede leerlos ni modificarlos aunque conozca los identificadores.
+      // Se listan las colecciones una a una (en vez de un comodín sobre users/{uid}) para que
+      // ninguna regla se solape con la validación del documento de perfil.
+      match /pages/{document=**} {
+        allow read, write: if isOwner(uid);
+      }
+      match /chats/{document=**} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+
+    // Todo lo demás está denegado
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

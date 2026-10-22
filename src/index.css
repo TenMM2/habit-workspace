@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Modo claro */
+:root {
+  --bg-app: #ffffff;
+  --bg-side: #f7f6f3;
+  --bg-hover: #efefed;
+  --line: #e9e9e7;
+  --fg: #37352f;
+  --muted: #787774;
+  --accent: #2383e2;
+}
+
+/* Modo oscuro (por defecto) */
+.dark {
+  --bg-app: #191919;
+  --bg-side: #202020;
+  --bg-hover: #2a2a2a;
+  --line: #2f2f2f;
+  --fg: #ededed;
+  --muted: #9b9b9b;
+  --accent: #529cca;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-app text-fg antialiased;
+    font-family: -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
+}
+
+@layer components {
+  .input {
+    @apply w-full rounded-md border border-line bg-app px-3 py-2 text-sm text-fg placeholder:text-muted;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md border border-line px-4 py-2 text-sm font-medium transition-colors hover:bg-hover disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply border-transparent bg-accent text-white hover:bg-accent hover:brightness-110;
+  }
+}
