@@ -26,7 +26,7 @@ $origenesPermitidos = $config['allowed_origins'] ?? [
     'http://localhost:5173', 'http://127.0.0.1:5173',   // Vite (desarrollo)
     'http://localhost:4173', 'http://127.0.0.1:4173',   // Vite (vista previa)
     'http://localhost:8787', 'http://127.0.0.1:8787',   // este mismo servidor PHP
-    'http://localhost', 'capacitor://localhost',         // Capacitor (Android / iOS)
+    'http://localhost', 'https://localhost', 'capacitor://localhost', // Capacitor (Android / iOS)
 ];
 
 header('Content-Type: application/json; charset=utf-8');

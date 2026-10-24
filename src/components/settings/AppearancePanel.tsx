@@ -24,6 +24,12 @@ export default function AppearancePanel() {
         {opcion('light', 'Claro (Sol)', <Sun size={22} />)}
       </div>
       <p className="text-sm text-muted">También puedes cambiarlo en cualquier momento con el icono de la barra superior.</p>
+      {window.desktop && (
+        <p className="mt-2 rounded-md border border-line p-3 text-sm text-muted" data-testid="info-escritorio">
+          Aplicación de escritorio · {window.desktop.platform} · Electron {window.desktop.versions.electron} · Chrome{' '}
+          {window.desktop.versions.chrome.split('.')[0]}
+        </p>
+      )}
     </section>
   );
 }

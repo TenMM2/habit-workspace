@@ -7,3 +7,4 @@ dist
 api/config.php
 api/cacert.pem
 e2e/capturas
+/release/

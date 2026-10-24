@@ -183,9 +183,13 @@ await paso('Asistente IA: abrir, preguntar y recibir respuesta', async () => {
   await page.getByRole('button', { name: 'Abrir asistente IA' }).click();
   await page.getByRole('dialog', { name: 'Asistente IA' }).waitFor();
   await page.getByRole('button', { name: 'Resumen semanal' }).click();
-  await page.getByText('Pensando…').waitFor();
-  await page.getByText('Pensando…').waitFor({ state: 'detached', timeout: 60000 });
-  const origen = await page.getByRole('dialog', { name: 'Asistente IA' }).getByText(/Gemini|Modo respaldo/).first().textContent();
+  // Se espera la respuesta (no el "Pensando…" intermedio, que con el modo de respaldo dura milisegundos)
+  const origen = await page
+    .getByRole('dialog', { name: 'Asistente IA' })
+    .getByText(/Gemini ·|Modo respaldo/)
+    .first()
+    .waitFor({ timeout: 70000 })
+    .then(() => page.getByRole('dialog', { name: 'Asistente IA' }).getByText(/Gemini ·|Modo respaldo/).first().textContent());
   resultados.push(['INFO ', 'Asistente respondió con: ' + origen.trim()]);
 });
 await page.screenshot({ path: SHOTS + '/6-asistente.png' });

@@ -17,7 +17,8 @@ export interface RespuestaAsistente {
   modelo?: string;
 }
 
-const ENDPOINT = '/api/gemini.php';
+// En el móvil (Capacitor) no existe /api: se define la URL completa del proxy al compilar
+const ENDPOINT = import.meta.env.VITE_ASSISTANT_URL || '/api/gemini.php';
 const TIMEOUT_MS = 30_000;
 const MAX_MENSAJES = 12;
 
