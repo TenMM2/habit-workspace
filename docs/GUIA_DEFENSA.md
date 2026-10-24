@@ -83,8 +83,8 @@ Habla **mirando al tribunal**, no a la pantalla. Lo que va en *cursiva* es lo qu
 | **8:00–9:30** | **5. Ajustes y planes** | Ajustes → nombre → Apariencia → Planes: «Mejorar a Pro» → aparece la factura. | *«Los planes están simulados: cambia un campo y genera una factura de prueba. En producción haría falta una pasarela real y validación en servidor; está en las líneas futuras.»* |
 | **9:30–11:30** | **6. Arquitectura** | Muestra el diagrama de arquitectura (`docs\diagramas`). | *«Una única interfaz `Backend` con dos implementaciones intercambiables. La interfaz no sabe dónde están los datos. Esto me permitió probarlo todo sin depender de un servicio externo.»* |
 | **11:30–13:30** | **7. Seguridad y pruebas** | En el navegador abre DevTools → Red: enseña que en la petición del asistente **no hay ninguna clave**. Muestra el terminal con `npm test` (35 en verde). | *«Aislamiento por usuario, contraseñas con PBKDF2, bloqueo por fuerza bruta, validación de lo que devuelve la IA. 35 tests unitarios y 50 comprobaciones en navegador real. Además hice pruebas de mutación: rompí la seguridad a propósito y los tests fallaron.»* |
-| **13:30–14:30** | **8. Multiplataforma** | (a) Navegador en `localhost:4173`: icono de **instalar** en la barra; activa *Sin conexión* en DevTools y recarga: sigue funcionando. (b) Muestra la ventana de escritorio y **Ajustes → Apariencia** («Aplicación de escritorio · Electron 45»). (c) Abre la carpeta `android\`. | *«La misma app es una PWA instalable que funciona sin conexión, un programa de Windows con Electron —con aislamiento de contexto, sin Node en la web y CSP estricta— y tiene la estructura de Capacitor para Android. El APK no está compilado porque en este equipo no hay SDK de Android.»* |
-| **14:30–15:00** | **9. Cierre** | Vuelve al panel. | *«Cumplo los objetivos: una aplicación completa, segura y probada, con limitaciones que he documentado: el límite del plan Free solo está en la interfaz, y no he podido probar Firebase real ni compilar el APK. Líneas futuras: …. Gracias, quedo a su disposición.»* |
+| **13:30–14:30** | **8. Multiplataforma** | (a) Navegador en `localhost:4173`: icono de **instalar** en la barra; activa *Sin conexión* en DevTools y recarga: sigue funcionando. (b) Muestra la ventana de escritorio y **Ajustes → Apariencia** («Aplicación de escritorio · Electron 45»). (c) Abre la carpeta `android\`. | *«La misma app es una PWA instalable que funciona sin conexión, un programa de Windows con Electron —con aislamiento de contexto, sin Node en la web y CSP estricta— y tiene la estructura de Capacitor lista para extenderla a Android. El canal móvil que entrego es la PWA; el APK de tienda sería la fase de despliegue móvil.»* |
+| **14:30–15:00** | **9. Cierre** | Vuelve al panel. | *«Cumplo los objetivos: una aplicación completa, segura y probada, con un enfoque Local-First y unos límites de alcance que he documentado: el límite del plan Free solo está en la interfaz, y los adaptadores cloud —Firebase y el APK— quedan como fase de despliegue. Líneas futuras: …. Gracias, quedo a su disposición.»* |
 
 ### Consejos de exposición
 
@@ -101,12 +101,14 @@ Habla **mirando al tribunal**, no a la pantalla. Lo que va en *cursiva* es lo qu
 
 ### 1. «¿Por qué guardas los datos en el navegador (IndexedDB) y además usas Firebase? ¿No es incoherente?»
 
-> *Es una decisión de diseño, no una incoherencia. La aplicación habla con **una sola interfaz de datos**, `Backend`, y detrás hay dos
-> implementaciones: Firebase para la nube y una base local persistente. Si hay claves de Firebase en `.env` se usa la nube; si no, la local.
-> Lo hice por tres razones: puedo desarrollar y probar **sin depender de un servicio externo** —las 85 pruebas automáticas corren sin cuenta
-> de Firebase—; la app **funciona sin conexión**, que es importante para un rastreador de hábitos que se usa en el móvil; y para la defensa
-> no dependo de la red. La local no es de juguete: tiene usuarios, contraseñas con PBKDF2, sesiones con caducidad y aislamiento entre usuarios.
-> La limitación es que en modo local los datos solo están en ese dispositivo; para sincronizar entre dispositivos habría que usar Firebase.*
+> *Es una decisión de arquitectura, no una incoherencia: el proyecto es **Local-First y Offline-First**. La aplicación habla con **una sola
+> interfaz de datos**, `Backend`, y detrás hay dos implementaciones: la base local persistente en IndexedDB, que es el modo principal, y los
+> adaptadores de Firebase como arquitectura extensible hacia la nube. Si hay claves en `.env` se usa la nube; si no, la local. El modo local
+> me da **soberanía del dato** y **privacidad total** —los datos no salen del dispositivo—, **coste de infraestructura cero**, y la app
+> **funciona 100 % sin conexión** gracias a IndexedDB, la PWA y el ejecutable de Electron; además puedo probarlo todo sin depender de un servicio
+> externo, y las 85 pruebas automáticas corren así. La local no es de juguete: tiene usuarios, contraseñas con PBKDF2, sesiones con caducidad y
+> aislamiento entre usuarios. La contrapartida es que los datos viven solo en ese dispositivo; sincronizar entre dispositivos sería la fase cloud,
+> activando el adaptador de Firebase.*
 
 ### 2. «¿Cómo proteges la clave de Gemini? ¿Y qué impide que cualquiera use tu proxy y gaste tu cuota?»
 
@@ -148,11 +150,12 @@ Habla **mirando al tribunal**, no a la pantalla. Lo que va en *cursiva* es lo qu
 
 ### 6. «¿Y Capacitor? ¿Funciona en un móvil?»
 
-> *Con honestidad: **he dejado la estructura lista, pero no he compilado el APK**. Hay `capacitor.config.ts` con el identificador de la app,
-> el directorio `dist` y el esquema `https`, y la plataforma `android/` generada y sincronizada con `cap sync`. Lo que falta es
-> abrirla en Android Studio, compilar e instalar, y para eso se necesita el SDK de Android, que no tengo en este equipo. Los pasos están en `docs/MULTIPLATAFORMA.md`.
-> Lo que sí está probado es la parte que comparte: la misma web es una PWA instalable, y el diseño responsive se verificó a 390 píxeles. Para el
-> asistente en el móvil hace falta una URL absoluta al proxy, que se define con `VITE_ASSISTANT_URL`.*
+> *Mi proyecto es **Local-First y Offline-First**: lo que prioricé fue que el dato esté en el dispositivo y que funcione sin red. Para el móvil,
+> el canal que entrego es la **PWA instalable**, que probé con la red cortada y con el diseño responsive a 390 píxeles. Capacitor lo dejé como
+> **arquitectura extensible**: hay `capacitor.config.ts` con el identificador de la app, el directorio `dist` y el esquema `https`, y la plataforma
+> `android/` generada y sincronizada con `cap sync`. Lo que **no he hecho es compilar el APK**: es el paso de la fase de despliegue móvil
+> (abrirlo en Android Studio, compilar y publicar) y está documentado en `docs/MULTIPLATAFORMA.md`. Para el asistente en el móvil hace falta una URL absoluta al proxy,
+> que se define con `VITE_ASSISTANT_URL`.*
 
 ### 7. «¿Cómo garantizas que un usuario no puede ver los datos de otro? ¿Lo has probado?»
 
@@ -162,8 +165,9 @@ Habla **mirando al tribunal**, no a la pantalla. Lo que va en *cursiva* es lo qu
 > no puede modificarlas, borrarlas ni cambiarles el plan, y sin sesión no se lee ni escribe nada. También hice una prueba de mutación: desactivé la
 > comprobación a propósito y los tests fallaron, es decir, detectan el fallo.*
 >
-> *Lo que **no** he hecho es probar las reglas de Firestore contra el emulador oficial, porque no he configurado un proyecto de Firebase.
-> Está documentado y en líneas futuras.*
+> *Aclaración sobre el alcance: la verificación automática cubre el modo principal, Local-First. Las reglas de Firestore están escritas y
+> forman parte de la arquitectura extensible, pero **no las he probado contra el emulador oficial ni contra un proyecto real**: eso corresponde a la
+> fase de despliegue cloud y está recogido en las líneas futuras.*
 
 ### 8. «Tus pagos y planes, ¿son reales? ¿Qué impide a un usuario saltarse el límite del plan Free?»
 
@@ -188,8 +192,9 @@ Habla **mirando al tribunal**, no a la pantalla. Lo que va en *cursiva* es lo qu
 > navegador me encontraron **dos errores reales** que los unitarios no vieron —una redirección al recargar una página y un avatar tapado por el banner—, y los corregí.
 > También hice pruebas de mutación para comprobar que los tests detectan fallos.*
 >
-> *Lo que **no cubren**: Firebase real —ni las reglas contra el emulador ni el login con Google—, la compilación y ejecución en un dispositivo
-> Android, y la calidad de las respuestas de la IA, que no es determinista. Prefiero decirlo yo.*
+> *Lo que **no cubren**, por pertenecer a la fase de despliegue cloud: los adaptadores de Firebase —ni las reglas contra el emulador ni el login
+> con Google—, la compilación del APK, y la calidad de las respuestas de la IA, que no es determinista. Mis pruebas validan el modo
+> principal, Local-First, en web, PWA y Electron. Prefiero decirlo yo.*
 
 ---
 

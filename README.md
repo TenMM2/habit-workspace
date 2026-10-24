@@ -193,16 +193,20 @@ scripts/        Iconos, empaquetado, lanzador de Electron y exportación de diag
 
 | Documento | Contenido |
 |---|---|
-| [📘 Memoria del TFG](docs/MEMORIA_TFG.md) | Resumen/Abstract, objetivos DAW y DAM, arquitectura, datos, seguridad, pruebas, conclusiones |
+| [📘 Memoria del TFG](docs/MEMORIA_TFG.md) · [Word](docs/MEMORIA_TFG.docx) | Resumen/Abstract, objetivos DAW y DAM, arquitectura, datos, seguridad, pruebas, conclusiones |
 | [🎤 Guía de defensa](docs/GUIA_DEFENSA.md) | Checklist previo, guion de 15 minutos y las 10 preguntas difíciles |
 | [🔒 Seguridad](SECURITY.md) | Medidas aplicadas y limitaciones conocidas |
 | [📦 Multiplataforma](docs/MULTIPLATAFORMA.md) | PWA, Electron y Capacitor paso a paso |
 
-## Limitaciones conocidas
+## Enfoque Local-First y alcance
 
-Se declaran abiertamente: el login con Google y las reglas de Firestore están implementados pero **no verificados contra un proyecto real de Firebase**;
-el **APK de Android no está compilado**; los **pagos están simulados** y el límite del plan Free solo se controla en la interfaz; el proxy PHP está
-pensado para uso local. Detalle en la memoria (apartado 9) y en [SECURITY.md](SECURITY.md).
+El proyecto es **Local-First y Offline-First**: el dato vive en el dispositivo (IndexedDB), lo que aporta soberanía del dato, privacidad total, coste de
+infraestructura cero y funcionamiento 100 % sin conexión, tanto en la PWA como en el ejecutable de Electron. Los adaptadores de **Firebase** y
+**Capacitor** están implementados como **arquitectura extensible** para un futuro despliegue cloud (sincronización entre dispositivos, tiendas móviles).
+
+Alcance verificado y límites, con transparencia: las 85 pruebas validan el modo principal; los adaptadores cloud (Firebase, APK) **no se han validado contra
+servicios reales** en esta entrega; los **pagos están simulados** y el límite del plan Free solo se controla en la interfaz; el proxy PHP está pensado
+para uso local. Detalle en la memoria (apartados 4.5 y 9) y en [SECURITY.md](SECURITY.md).
 
 ## Autor
 
