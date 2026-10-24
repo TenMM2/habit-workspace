@@ -1,48 +1,65 @@
-# Seguridad
+# Security
 
-| Riesgo | Medida | Dónde |
+## Web application & data layer
+
+| Risk | Mitigation | Where |
 |---|---|---|
-| Acceso sin sesión | `ProtectedRoute`: toda ruta interna redirige a `/login` | `components/ProtectedRoute.tsx` |
-| Acceso a datos ajenos | Firestore: todo cuelga de `users/{uid}` y solo lo lee/escribe su dueño. Modo local: `exigirUsuario` aplica la misma regla | `firestore.rules`, `backend/localBackend.ts` |
-| Contraseñas (modo local) | PBKDF2-SHA256, 150 000 iteraciones, sal aleatoria por usuario; nunca en claro | `backend/local/password.ts` |
-| Fuerza bruta (modo local) | 5 fallos por correo → bloqueo de 1 min; siempre se verifica un hash para no revelar qué cuentas existen por tiempos | `backend/localBackend.ts` |
-| Sesiones | Token aleatorio de 256 bits, caduca a los 7 días, se elimina al cerrar sesión | `backend/localBackend.ts` |
-| Escalada de privilegios | Reglas: el correo y la fecha de alta no se pueden modificar; `plan` solo admite `free`/`pro`; `billing` ≤ 24 entradas | `firestore.rules` |
-| Subidas | Imágenes recomprimidas en el navegador a JPEG (≤ 260 KB); URLs solo `https://`; Storage: solo imágenes < 5 MB en la carpeta propia | `lib/image.ts`, `storage.rules` |
-| XSS | React escapa todo el texto; no se usa `dangerouslySetInnerHTML`; las negritas del asistente se pintan por trozos, no con HTML | `components/AssistantWidget.tsx` |
-| API key de Gemini | Solo en el servidor (`api/config.php` o entorno), en cabecera (no en la URL, para no aparecer en logs); `.gitignore` | `api/gemini.php` |
-| Abuso del proxy | Solo orígenes permitidos (CORS), tamaño máx. 40 KB, 12 mensajes, 20 peticiones/min por IP, validación de roles y tipos | `api/gemini.php` |
-| Inyección de instrucciones (prompt injection) | Los datos del usuario van en un bloque delimitado y el sistema indica que son datos, no órdenes. Comprobado con un nombre de página malicioso | `api/gemini.php` |
-| Salida de la IA no fiable | Las páginas propuestas se validan y recortan (tipos, longitudes, cantidades) antes de crearse; el usuario confirma con un clic | `lib/paginaPropuesta.ts` |
-| Fugas de errores | El proxy devuelve códigos genéricos; el detalle va al log del servidor | `api/gemini.php` |
-| Archivos internos del proxy | `.htaccess` deniega `config.php` y `config.sample.php` en Apache | `api/.htaccess` |
+| Access without a session | `ProtectedRoute`: every internal route redirects to `/login` | `components/ProtectedRoute.tsx` |
+| Access to other users' data | Firestore: everything hangs under `users/{uid}` and only its owner can read/write. Local mode: `exigirUsuario` enforces the same rule on every operation | `firestore.rules`, `backend/localBackend.ts` |
+| Passwords (local mode) | PBKDF2-SHA256, 150,000 iterations, random per-user salt; never stored in clear text | `backend/local/password.ts` |
+| Brute force (local mode) | 5 failed attempts per email → 1-minute lockout; a hash is always verified so response timing does not reveal which accounts exist | `backend/localBackend.ts` |
+| Sessions | 256-bit random token, 7-day expiry, deleted on sign-out | `backend/localBackend.ts` |
+| Privilege escalation | Rules: email and creation date are immutable; `plan` only accepts `free`/`pro`; `billing` ≤ 24 entries | `firestore.rules` |
+| Uploads | Images re-compressed in the browser to JPEG (≤ 260 KB); URLs must be `https://`; Storage rules: images < 5 MB in the owner's own folder only | `lib/image.ts`, `storage.rules` |
+| XSS | React escapes all text; no `dangerouslySetInnerHTML`; assistant bold text is rendered in chunks, not as HTML | `components/AssistantWidget.tsx` |
 
-## Aplicación de escritorio (Electron)
+## AI assistant & PHP proxy
 
-| Riesgo | Medida | Dónde |
+| Risk | Mitigation | Where |
 |---|---|---|
-| La web accede a Node / al sistema | `nodeIntegration: false`, `contextIsolation: true`, `sandbox: true`; comprobado: `require`, `process` y `Buffer` no existen en la página | `electron/main.cjs` |
-| API expuesta a la web | `contextBridge` expone solo `window.desktop` (plataforma y versiones), congelado y de solo lectura | `electron/preload.cjs` |
-| Ejecución de código inyectado | CSP `script-src 'self'` (sin `eval` ni scripts en línea), `object-src 'none'`, `frame-src 'none'`; comprobado con eventos `securitypolicyviolation` | `electron/main.cjs` |
-| Navegación a sitios externos | `will-navigate` y `setWindowOpenHandler`: solo `app://`; los enlaces `https` se abren en el navegador del sistema | `electron/main.cjs` |
-| Lectura de archivos fuera de la app (*path traversal*) | La ruta se normaliza y se rechaza lo que quede fuera de `dist/`; comprobado con `%2e%2e/` | `electron/main.cjs` |
-| Proxy abierto | Solo se reenvía `POST /api/gemini.php`; cualquier otra ruta responde 404 | `electron/main.cjs` |
-| Permisos del navegador (cámara, ubicación…) | Todos denegados | `electron/main.cjs` |
-| Varias instancias | `requestSingleInstanceLock` | `electron/main.cjs` |
+| Gemini API key leakage | Lives only on the server (`api/config.php` or environment variable), sent in a header (not the URL, so it never reaches logs); gitignored; never shipped to the browser | `api/gemini.php` |
+| Proxy abuse | CORS origin allowlist, max 40 KB body, 12 messages, 2,000 chars per message, 20 requests/min per IP, role and type validation | `api/gemini.php` |
+| Prompt injection | User data is fenced in a delimited block and the system prompt declares it to be data, not instructions. Verified with a malicious page name | `api/gemini.php` |
+| Untrusted model output | Proposed pages are validated and clamped (types, lengths, counts) before creation; the user must confirm with a click | `lib/paginaPropuesta.ts` |
+| Error leakage | The proxy returns generic status codes; details go to the server log only | `api/gemini.php` |
+| Internal proxy files | `.htaccess` denies `config.php` and `config.sample.php` on Apache | `api/.htaccess` |
+| Service unavailable / quota | Automatic retry on 429/500/503, then a deterministic local fallback assistant | `api/gemini.php`, `lib/assistantLocal.ts` |
 
-## PWA y service worker
+## Desktop application (Electron)
 
-| Riesgo | Medida | Dónde |
+| Risk | Mitigation | Where |
 |---|---|---|
-| Datos privados en caché | El service worker no intercepta `/api/` ni otros orígenes; comprobado que no hay nada de `/api/` en caché | `public/sw.js` |
-| Caché obsoleta | Navegaciones «red primero»; en cada instalación se eliminan los `/assets/` de versiones anteriores | `public/sw.js` |
-| Scripts en línea (necesarios para una CSP estricta) | El script del tema es un archivo externo | `public/theme-init.js` |
+| Web content reaching Node / the OS | `nodeIntegration: false`, `contextIsolation: true`, `sandbox: true`; verified that `require`, `process` and `Buffer` do not exist in the page | `electron/main.cjs` |
+| Exposed native API surface | `contextBridge` exposes only `window.desktop` (platform and versions), frozen and read-only | `electron/preload.cjs` |
+| Injected code execution | CSP `script-src 'self'` (no `eval`, no inline scripts), `object-src 'none'`, `frame-src 'none'`; verified with `securitypolicyviolation` events | `electron/main.cjs` |
+| Navigation to external sites | `will-navigate` and `setWindowOpenHandler`: only `app://`; `https` links open in the system browser | `electron/main.cjs` |
+| Path traversal | Paths are normalized and anything outside `dist/` is rejected; verified with `%2e%2e/` | `electron/main.cjs` |
+| Open proxy | Only `POST /api/gemini.php` is forwarded; every other route returns 404 | `electron/main.cjs` |
+| Browser permissions (camera, location…) | All denied | `electron/main.cjs` |
+| Multiple instances | `requestSingleInstanceLock` | `electron/main.cjs` |
 
-## Limitaciones conocidas (para la memoria)
+## PWA & service worker
 
-- **El modo local es para uso personal y demostraciones.** Los datos viven en el navegador del usuario: quien tenga acceso al ordenador y al perfil del navegador puede inspeccionarlos. Un modo multiusuario real exige Firebase o un backend.
-- **El límite de 3 páginas del plan Free solo se controla en la interfaz.** Las reglas de Firestore no pueden contar documentos; para forzarlo hace falta una Cloud Function.
-- **Los pagos están simulados**: cambiar de plan solo modifica el campo `plan`. Una pasarela real (p. ej. Stripe) debe validar el pago en servidor.
-- **El proxy PHP no autentica al usuario.** Está pensado para uso local; en producción habría que verificar el token de Firebase y mover el límite de uso a una base de datos.
-- Registro sin verificación de correo electrónico en el modo local.
-- El servidor PHP integrado (`php -S`) es solo para desarrollo.
+| Risk | Mitigation | Where |
+|---|---|---|
+| Private data in cache | The service worker does not intercept `/api/` or cross-origin requests; verified that nothing under `/api/` is cached | `public/sw.js` |
+| Stale cache | Network-first navigations; each install purges `/assets/` from previous versions | `public/sw.js` |
+| Inline scripts (blocks a strict CSP) | The theme script is an external file | `public/theme-init.js` |
+
+## Repository hygiene
+
+`.env*`, `api/config.php`, `api/cacert.pem`, `node_modules/`, `dist/` and `release/` are gitignored; no secrets are committed.
+
+## Known limitations
+
+- **Local mode is for personal use and demos.** Data lives in the user's browser: anyone with access to the computer and browser profile can inspect it. True multi-user operation requires Firebase or a server backend.
+- **The Free-plan limit of 3 pages is enforced in the UI only.** Firestore rules cannot count documents; server-side enforcement needs a Cloud Function.
+- **Payments are simulated:** changing plan only modifies the `plan` field. A real gateway (e.g. Stripe) must validate payment on the server.
+- **The PHP proxy does not authenticate users.** It is designed for local use; in production it should verify the Firebase ID token and move rate limiting to a database.
+- **Firebase rules and the Google sign-in flow have not been validated against a real Firebase project** in this release.
+- No email verification in local mode.
+- PHP's built-in server (`php -S`) is for development only.
+
+## Reporting a vulnerability
+
+This is an academic project. If you find a security issue, please open a private security advisory on the GitHub repository or contact the author directly.
