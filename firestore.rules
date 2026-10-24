@@ -16,18 +16,21 @@ service cloud.firestore {
       allow read: if isOwner(uid);
 
       allow create: if isOwner(uid)
-        && request.resource.data.keys().hasOnly(['displayName', 'email', 'photoURL', 'bannerURL', 'plan', 'createdAt'])
+        && request.resource.data.keys().hasOnly(['displayName', 'email', 'photoURL', 'bannerURL', 'plan', 'billing', 'createdAt'])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() <= 80
         && request.resource.data.email == request.auth.token.email
-        && request.resource.data.plan in ['free', 'pro'];
+        && request.resource.data.plan in ['free', 'pro']
+        && request.resource.data.billing is list;
 
       allow update: if isOwner(uid)
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['displayName', 'photoURL', 'bannerURL', 'plan'])
+             .hasOnly(['displayName', 'photoURL', 'bannerURL', 'plan', 'billing'])
         && request.resource.data.displayName is string
         && request.resource.data.displayName.size() <= 80
-        && request.resource.data.plan in ['free', 'pro'];
+        && request.resource.data.plan in ['free', 'pro']
+        && request.resource.data.billing is list
+        && request.resource.data.billing.size() <= 24;
 
       allow delete: if isOwner(uid);
 

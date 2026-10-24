@@ -1,0 +1,4 @@
+# Carpeta del proxy PHP: solo gemini.php debe ser accesible
+<FilesMatch "^config(\.sample)?\.php$">
+  Require all denied
+</FilesMatch>

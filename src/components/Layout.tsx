@@ -3,10 +3,12 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import { PanelLeft } from 'lucide-react';
 import Sidebar from './Sidebar';
 import SearchModal from './SearchModal';
-import PlanModal from './PlanModal';
+import SettingsModal, { type PestanaAjustes } from './SettingsModal';
+import AssistantWidget from './AssistantWidget';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
+import { DEFAULT_BANNER } from '../lib/banners';
 import { crearPagina } from '../lib/db';
 import { FREE_PAGE_LIMIT } from '../types';
 
@@ -22,13 +24,14 @@ function leerColapsada(): boolean {
 
 export default function Layout() {
   const { user } = useAuth();
-  const { pages, plan, error } = useData();
+  const { pages, plan, profile, error } = useData();
   const navigate = useNavigate();
 
   const [colapsada, setColapsada] = useState(leerColapsada); // escritorio
   const [cajon, setCajon] = useState(false); // móvil / tablet
   const [buscando, setBuscando] = useState(false);
-  const [planAbierto, setPlanAbierto] = useState(false);
+  const [ajustes, setAjustes] = useState<PestanaAjustes | null>(null);
+  const [asistente, setAsistente] = useState(false);
 
   useEffect(() => {
     try {
@@ -53,26 +56,42 @@ export default function Layout() {
   const nuevaPagina = useCallback(async () => {
     if (!user) return;
     if (plan === 'free' && pages.length >= FREE_PAGE_LIMIT) {
-      setPlanAbierto(true);
+      setAjustes('plan');
       return;
     }
     try {
-      const id = await crearPagina(user.uid, 'Nueva página');
+      const id = await crearPagina(user.uid, 'Nueva página', profile?.bannerURL ?? DEFAULT_BANNER);
       setCajon(false);
       navigate(`/p/${id}`);
     } catch {
       alert('No se pudo crear la página. Inténtalo de nuevo.');
     }
-  }, [user, plan, pages.length, navigate]);
+  }, [user, plan, pages.length, profile?.bannerURL, navigate]);
 
   const cerrarCajon = () => setCajon(false);
+  /** Acciones de la barra lateral; en móvil primero se cierra el cajón. */
+  const accion = (fn: () => void) => () => {
+    setCajon(false);
+    fn();
+  };
+
+  const barra = (
+    <Sidebar
+      onNavigate={cerrarCajon}
+      onSearch={accion(() => setBuscando(true))}
+      onNewPage={() => void nuevaPagina()}
+      onUpgrade={accion(() => setAjustes('plan'))}
+      onAssistant={accion(() => setAsistente(true))}
+      onSettings={accion(() => setAjustes('cuenta'))}
+    />
+  );
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Escritorio */}
       {!colapsada && (
         <aside className="hidden w-64 shrink-0 border-r border-line bg-side md:block" aria-label="Barra lateral">
-          <Sidebar onNavigate={cerrarCajon} onSearch={() => setBuscando(true)} onNewPage={() => void nuevaPagina()} onUpgrade={() => setPlanAbierto(true)} />
+          {barra}
         </aside>
       )}
 
@@ -85,7 +104,7 @@ export default function Layout() {
             onClick={(e) => e.stopPropagation()}
             aria-label="Barra lateral"
           >
-            <Sidebar onNavigate={cerrarCajon} onSearch={() => { setCajon(false); setBuscando(true); }} onNewPage={() => void nuevaPagina()} onUpgrade={() => { setCajon(false); setPlanAbierto(true); }} />
+            {barra}
           </aside>
         </div>
       )}
@@ -114,7 +133,8 @@ export default function Layout() {
       </div>
 
       {buscando && <SearchModal onClose={() => setBuscando(false)} />}
-      {planAbierto && <PlanModal onClose={() => setPlanAbierto(false)} />}
+      {ajustes && <SettingsModal inicial={ajustes} onClose={() => setAjustes(null)} />}
+      <AssistantWidget abierto={asistente} onAbrir={setAsistente} onNecesitaPlan={() => setAjustes('plan')} />
     </div>
   );
 }

@@ -3,6 +3,8 @@ import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { mensajeDeError, useAuth } from '../context/AuthContext';
 import AuthShell from '../components/AuthShell';
 import GoogleButton from '../components/GoogleButton';
+import { backend, modoLocal } from '../backend';
+import { DEMO_EMAIL, DEMO_PASSWORD } from '../backend/local/seed';
 
 export default function Login() {
   const { user, loading, login, loginWithGoogle, resetPassword } = useAuth();
@@ -50,11 +52,29 @@ export default function Login() {
 
   return (
     <AuthShell title="Bienvenido de nuevo" subtitle="Entra para seguir con tus hábitos.">
-      <GoogleButton
-        disabled={busy}
-        onClick={() => void ejecutar(loginWithGoogle, () => navigate(destino, { replace: true }))}
-      />
-      <p className="my-4 text-center text-xs text-muted">o con tu correo</p>
+      {backend.supportsGoogle ? (
+        <>
+          <GoogleButton
+            disabled={busy}
+            onClick={() => void ejecutar(loginWithGoogle, () => navigate(destino, { replace: true }))}
+          />
+          <p className="my-4 text-center text-xs text-muted">o con tu correo</p>
+        </>
+      ) : (
+        modoLocal && (
+          <>
+            <button
+              type="button"
+              className="btn w-full"
+              disabled={busy}
+              onClick={() => void ejecutar(() => login(DEMO_EMAIL, DEMO_PASSWORD), () => navigate(destino, { replace: true }))}
+            >
+              Entrar con la cuenta demo
+            </button>
+            <p className="my-4 text-center text-xs text-muted">o con tu correo</p>
+          </>
+        )
+      )}
 
       <form onSubmit={enviar} className="grid gap-3" noValidate>
         <label className="grid gap-1 text-sm text-muted">

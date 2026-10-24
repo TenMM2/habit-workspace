@@ -4,3 +4,6 @@ dist
 .env.local
 .firebase
 *.log
+api/config.php
+api/cacert.pem
+e2e/capturas

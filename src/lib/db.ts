@@ -1,72 +1,44 @@
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-  writeBatch,
-} from 'firebase/firestore';
-import { db } from './firebase';
-import { DEFAULT_BANNER } from './banners';
-import type { HabitPage, Plan } from '../types';
+import { backend } from '../backend';
+import type { PageChanges, ProfileChanges } from '../backend/types';
+import type { HabitPage, Invoice, Plan } from '../types';
+import { todayISO } from './dates';
+import { nuevoId } from './ids';
 
-// Estructura:  users/{uid}/pages/{pageId}   y   users/{uid}/pages/{pageId}/days/{YYYY-MM-DD}
-export const pagesCol = (uid: string) => collection(db, 'users', uid, 'pages');
-export const pageDoc = (uid: string, pageId: string) => doc(db, 'users', uid, 'pages', pageId);
-export const daysCol = (uid: string, pageId: string) => collection(db, 'users', uid, 'pages', pageId, 'days');
+// Fachada sobre el backend activo (Firebase o local). Los componentes solo usan estas funciones.
+export { nuevoId };
 
-export const nuevoId = (): string => Math.random().toString(36).slice(2, 10);
+export const crearPagina = (uid: string, titulo: string, banner: string): Promise<string> =>
+  backend.pages.create(uid, titulo, banner);
 
-export async function crearPagina(uid: string, titulo: string): Promise<string> {
-  const ref = await addDoc(pagesCol(uid), {
-    title: titulo,
-    icon: '📓',
-    avatarURL: null,
-    bannerURL: DEFAULT_BANNER,
-    quote: '',
-    rules: [],
-    habits: [
-      { id: nuevoId(), name: 'Entrenar', emoji: '🏋️' },
-      { id: nuevoId(), name: 'Lectura', emoji: '📚' },
-      { id: nuevoId(), name: 'Estudio', emoji: '🧠' },
-    ],
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return ref.id;
-}
+export const crearPaginaCon = (uid: string, pagina: Omit<HabitPage, 'id'>): Promise<string> =>
+  backend.pages.createFrom(uid, pagina);
 
-export function actualizarPagina(uid: string, pageId: string, cambios: Partial<Omit<HabitPage, 'id'>>): Promise<void> {
-  return updateDoc(pageDoc(uid, pageId), { ...cambios, updatedAt: serverTimestamp() });
-}
+export const actualizarPagina = (uid: string, pageId: string, cambios: PageChanges): Promise<void> =>
+  backend.pages.update(uid, pageId, cambios);
 
-/** Borra la página y todos sus días (Firestore no borra subcolecciones solo). */
-export async function borrarPagina(uid: string, pageId: string): Promise<void> {
-  const dias = await getDocs(daysCol(uid, pageId));
-  for (let i = 0; i < dias.docs.length; i += 400) {
-    const batch = writeBatch(db);
-    dias.docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
-    await batch.commit();
+export const borrarPagina = (uid: string, pageId: string): Promise<void> => backend.pages.remove(uid, pageId);
+
+export const marcarHabito = (uid: string, pageId: string, fecha: string, habitId: string, hecho: boolean): Promise<void> =>
+  backend.days.setCheck(uid, pageId, fecha, habitId, hecho);
+
+export const guardarNota = (uid: string, pageId: string, fecha: string, nota: string): Promise<void> =>
+  backend.days.setNote(uid, pageId, fecha, nota);
+
+export const actualizarPerfil = (uid: string, cambios: ProfileChanges): Promise<void> => backend.profile.update(uid, cambios);
+
+export const PRECIO_PRO = 4.99;
+
+/**
+ * Cambio de plan SIMULADO: no hay pasarela de pago. Actualiza el campo `plan` y, al mejorar a Pro,
+ * añade una factura ficticia al historial de facturación.
+ */
+export function cambiarPlan(uid: string, plan: Plan, facturasActuales: Invoice[]): Promise<void> {
+  const cambios: ProfileChanges = { plan };
+  if (plan === 'pro') {
+    cambios.billing = [
+      { id: nuevoId(), date: todayISO(), concept: 'Suscripción Pro (mensual)', amount: PRECIO_PRO },
+      ...facturasActuales,
+    ].slice(0, 24);
   }
-  await deleteDoc(pageDoc(uid, pageId));
-}
-
-export function marcarHabito(uid: string, pageId: string, fecha: string, habitId: string, hecho: boolean): Promise<void> {
-  return setDoc(
-    doc(daysCol(uid, pageId), fecha),
-    { date: fecha, checks: { [habitId]: hecho } },
-    { merge: true }
-  );
-}
-
-export function guardarNota(uid: string, pageId: string, fecha: string, nota: string): Promise<void> {
-  return setDoc(doc(daysCol(uid, pageId), fecha), { date: fecha, note: nota }, { merge: true });
-}
-
-/** Cambio de plan SIMULADO: no hay pasarela de pago. Solo actualiza el campo `plan` del perfil. */
-export function cambiarPlan(uid: string, plan: Plan): Promise<void> {
-  return updateDoc(doc(db, 'users', uid), { plan });
+  return backend.profile.update(uid, cambios);
 }

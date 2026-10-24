@@ -1,7 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { doc, onSnapshot, orderBy, query } from 'firebase/firestore';
-import { db } from '../lib/firebase';
-import { pagesCol } from '../lib/db';
+import { backend } from '../backend';
 import { useAuth } from './AuthContext';
 import type { HabitPage, Plan, Profile } from '../types';
 
@@ -21,50 +19,34 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const uid = user?.uid;
   const [profile, setProfile] = useState<Profile | null>(null);
   const [pages, setPages] = useState<HabitPage[]>([]);
-  const [loading, setLoading] = useState(true);
+  // uid del usuario para el que ya han llegado las páginas. "Cargando" se deriva de aquí en vez de
+  // guardarse aparte: así nunca hay un instante con usuario pero sin datos que parezca "no existe".
+  const [cargadoPara, setCargadoPara] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const loading = Boolean(uid) && cargadoPara !== uid;
 
   useEffect(() => {
     if (!uid) {
       setProfile(null);
       setPages([]);
-      setLoading(false);
+      setCargadoPara(null);
       return;
     }
-    setLoading(true);
     setError('');
-    const fallo = () => setError('No se pudieron cargar tus datos. Comprueba la conexión y las reglas de Firestore.');
+    const fallo = (e: unknown) => {
+      console.error(e);
+      setError('No se pudieron cargar tus datos. Comprueba la conexión y los permisos.');
+      setCargadoPara(uid);
+    };
 
-    const offProfile = onSnapshot(
-      doc(db, 'users', uid),
-      (snap) => setProfile(snap.exists() ? (snap.data() as Profile) : null),
-      fallo
-    );
-    const offPages = onSnapshot(
-      query(pagesCol(uid), orderBy('createdAt', 'asc')),
-      (snap) => {
-        setPages(
-          snap.docs.map((d) => {
-            const x = d.data();
-            return {
-              id: d.id,
-              title: x.title ?? 'Sin título',
-              icon: x.icon ?? '📓',
-              avatarURL: x.avatarURL ?? null,
-              bannerURL: x.bannerURL ?? 'preset:0',
-              quote: x.quote ?? '',
-              rules: Array.isArray(x.rules) ? x.rules : [],
-              habits: Array.isArray(x.habits) ? x.habits : [],
-            };
-          })
-        );
-        setLoading(false);
+    const offProfile = backend.profile.subscribe(uid, setProfile, fallo);
+    const offPages = backend.pages.subscribe(
+      uid,
+      (lista) => {
+        setPages(lista);
+        setCargadoPara(uid);
       },
-      (e) => {
-        fallo();
-        console.error(e);
-        setLoading(false);
-      }
+      fallo
     );
     return () => {
       offProfile();

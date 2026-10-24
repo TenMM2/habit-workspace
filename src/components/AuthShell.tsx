@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { CheckSquare } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
-import { firebaseConfigured } from '../lib/firebase';
+import { modoLocal } from '../backend';
 
 interface Props {
   title: string;
@@ -20,9 +20,9 @@ export default function AuthShell({ title, subtitle, children }: Props) {
         </div>
         <h1 className="text-2xl font-semibold">{title}</h1>
         <p className="mb-6 mt-1 text-sm text-muted">{subtitle}</p>
-        {!firebaseConfigured && (
-          <div className="mb-4 rounded-md border border-line bg-side p-3 text-sm" role="alert">
-            Firebase no está configurado. Copia <code>.env.example</code> a <code>.env</code> y rellena tus claves.
+        {modoLocal && (
+          <div className="mb-4 rounded-md border border-line bg-side p-3 text-sm" role="note">
+            <strong>Modo local:</strong> tus datos se guardan en este navegador (IndexedDB). Para usar Firebase, rellena el archivo <code>.env</code>.
           </div>
         )}
         {children}

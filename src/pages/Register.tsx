@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { mensajeDeError, useAuth } from '../context/AuthContext';
 import AuthShell from '../components/AuthShell';
 import GoogleButton from '../components/GoogleButton';
+import { backend } from '../backend';
 
 export default function Register() {
   const { user, loading, register, loginWithGoogle } = useAuth();
@@ -40,8 +41,12 @@ export default function Register() {
 
   return (
     <AuthShell title="Crea tu cuenta" subtitle="Tu espacio de hábitos, privado y solo tuyo.">
-      <GoogleButton disabled={busy} onClick={() => void ejecutar(loginWithGoogle)} />
-      <p className="my-4 text-center text-xs text-muted">o con tu correo</p>
+      {backend.supportsGoogle && (
+        <>
+          <GoogleButton disabled={busy} onClick={() => void ejecutar(loginWithGoogle)} />
+          <p className="my-4 text-center text-xs text-muted">o con tu correo</p>
+        </>
+      )}
 
       <form onSubmit={enviar} className="grid gap-3" noValidate>
         <label className="grid gap-1 text-sm text-muted">

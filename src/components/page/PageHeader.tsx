@@ -76,7 +76,7 @@ export default function PageHeader({ page, onChange, onDelete }: Props) {
         <button
           type="button"
           onClick={() => setPanel(panel === 'avatar' ? null : 'avatar')}
-          className="-mt-10 grid h-20 w-20 place-items-center overflow-hidden rounded-2xl border-4 border-[var(--bg-app)] bg-side text-4xl shadow-md sm:h-24 sm:w-24 sm:text-5xl"
+          className="relative z-10 -mt-10 grid h-20 w-20 place-items-center overflow-hidden rounded-2xl border-4 border-[var(--bg-app)] bg-side text-4xl shadow-md sm:h-24 sm:w-24 sm:text-5xl"
           aria-label="Cambiar icono de la página"
         >
           {page.avatarURL ? (

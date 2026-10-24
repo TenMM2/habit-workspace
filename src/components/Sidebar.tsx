@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { CalendarDays, ChevronUp, Home, LogOut, Plus, Search, Sparkles } from 'lucide-react';
+import { CalendarDays, ChevronUp, Home, LogOut, Plus, Search, Settings, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { FREE_PAGE_LIMIT } from '../types';
@@ -10,12 +10,14 @@ interface Props {
   onSearch: () => void;
   onNewPage: () => void;
   onUpgrade: () => void;
+  onAssistant: () => void;
+  onSettings: () => void;
 }
 
 const enlace = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-hover ${isActive ? 'bg-hover font-medium' : 'text-muted'}`;
 
-export default function Sidebar({ onNavigate, onSearch, onNewPage, onUpgrade }: Props) {
+export default function Sidebar({ onNavigate, onSearch, onNewPage, onUpgrade, onAssistant, onSettings }: Props) {
   const { user, logout } = useAuth();
   const { pages, plan, profile } = useData();
   const [menu, setMenu] = useState(false);
@@ -37,6 +39,9 @@ export default function Sidebar({ onNavigate, onSearch, onNewPage, onUpgrade }: 
         <NavLink to="/" end className={enlace} onClick={onNavigate}>
           <Home size={16} /> Inicio
         </NavLink>
+        <button type="button" className={enlace({ isActive: false })} onClick={onAssistant}>
+          <Sparkles size={16} /> Asistente IA
+        </button>
         <NavLink to="/calendario" className={enlace} onClick={onNavigate}>
           <CalendarDays size={16} /> Calendario
         </NavLink>
@@ -88,6 +93,16 @@ export default function Sidebar({ onNavigate, onSearch, onNewPage, onUpgrade }: 
       <div className="relative">
         {menu && (
           <div className="absolute bottom-full left-0 right-0 mb-1 rounded-md border border-line bg-app p-1 shadow-lg">
+            <button
+              type="button"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-hover"
+              onClick={() => {
+                setMenu(false);
+                onSettings();
+              }}
+            >
+              <Settings size={15} /> Ajustes
+            </button>
             <button
               type="button"
               className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-hover"

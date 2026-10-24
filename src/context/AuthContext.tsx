@@ -1,19 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import {
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  sendPasswordResetEmail,
-  signInWithEmailAndPassword,
-  signInWithPopup,
-  signOut,
-  updateProfile,
-  type User,
-} from 'firebase/auth';
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
-import { auth, db, googleProvider } from '../lib/firebase';
+import { backend } from '../backend';
+import type { AppUser } from '../types';
 
 interface AuthContextValue {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
   register: (name: string, email: string, password: string) => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
@@ -24,22 +14,7 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-/** Crea el perfil users/{uid} la primera vez que entra el usuario (correo o Google). */
-async function asegurarPerfil(user: User, nombre?: string): Promise<void> {
-  const ref = doc(db, 'users', user.uid);
-  const existente = await getDoc(ref);
-  if (existente.exists()) return;
-  await setDoc(ref, {
-    displayName: (nombre ?? user.displayName ?? user.email?.split('@')[0] ?? 'Usuario').slice(0, 80),
-    email: user.email,
-    photoURL: user.photoURL ?? null,
-    bannerURL: null,
-    plan: 'free',
-    createdAt: serverTimestamp(),
-  });
-}
-
-/** Traduce los códigos de error de Firebase a mensajes claros en español. */
+/** Traduce los códigos de error (Firebase o locales) a mensajes claros en español. */
 export function mensajeDeError(error: unknown): string {
   const code = typeof error === 'object' && error && 'code' in error ? String((error as { code: unknown }).code) : '';
   switch (code) {
@@ -50,11 +25,13 @@ export function mensajeDeError(error: unknown): string {
     case 'auth/email-already-in-use':
       return 'Ya existe una cuenta con ese correo.';
     case 'auth/weak-password':
-      return 'La contraseña debe tener al menos 8 caracteres.';
+      return 'La contraseña es demasiado corta.';
     case 'auth/invalid-email':
       return 'El correo no es válido.';
     case 'auth/too-many-requests':
       return 'Demasiados intentos. Inténtalo más tarde.';
+    case 'auth/requires-recent-login':
+      return 'Por seguridad, vuelve a iniciar sesión y repite la operación.';
     case 'auth/popup-closed-by-user':
     case 'auth/cancelled-popup-request':
       return 'Has cerrado la ventana de Google antes de terminar.';
@@ -62,48 +39,42 @@ export function mensajeDeError(error: unknown): string {
       return 'El navegador bloqueó la ventana de Google. Permite las ventanas emergentes.';
     case 'auth/network-request-failed':
       return 'Sin conexión. Revisa tu red.';
+    case 'local/google-unavailable':
+      return 'El acceso con Google solo está disponible con Firebase configurado.';
+    case 'local/reset-unavailable':
+      return 'En modo local no se envían correos. Puedes cambiar la contraseña desde Ajustes una vez dentro.';
     case 'permission-denied':
     case 'firestore/permission-denied':
       return 'No tienes permiso para realizar esta acción.';
+    case 'invalid-argument':
+      return 'Los datos introducidos no son válidos.';
     default:
       return 'Ha ocurrido un error. Inténtalo de nuevo.';
   }
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (u) => {
-      setUser(u);
-      setLoading(false);
-    });
-    return unsubscribe;
-  }, []);
+  useEffect(
+    () =>
+      backend.auth.subscribe((u) => {
+        setUser(u);
+        setLoading(false);
+      }),
+    []
+  );
 
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       loading,
-      async register(name, email, password) {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(cred.user, { displayName: name });
-        await asegurarPerfil(cred.user, name);
-      },
-      async login(email, password) {
-        await signInWithEmailAndPassword(auth, email, password);
-      },
-      async loginWithGoogle() {
-        const cred = await signInWithPopup(auth, googleProvider);
-        await asegurarPerfil(cred.user);
-      },
-      async resetPassword(email) {
-        await sendPasswordResetEmail(auth, email);
-      },
-      async logout() {
-        await signOut(auth);
-      },
+      register: backend.auth.register,
+      login: backend.auth.login,
+      loginWithGoogle: backend.auth.loginWithGoogle,
+      resetPassword: backend.auth.resetPassword,
+      logout: backend.auth.logout,
     }),
     [user, loading]
   );

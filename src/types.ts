@@ -24,11 +24,29 @@ export interface DayEntry {
 
 export type Plan = 'free' | 'pro';
 
+/** Factura SIMULADA del historial de facturación (no hay pasarela de pago real). */
+export interface Invoice {
+  id: string;
+  date: string; // YYYY-MM-DD
+  concept: string;
+  amount: number; // euros
+}
+
 export interface Profile {
   displayName: string;
   email: string;
   photoURL: string | null;
+  bannerURL: string | null; // banner por defecto de las páginas nuevas
   plan: Plan;
+  billing: Invoice[];
+}
+
+/** Usuario autenticado, independiente del backend (Firebase o local). */
+export interface AppUser {
+  uid: string;
+  email: string;
+  displayName: string;
+  photoURL: string | null;
 }
 
 export const FREE_PAGE_LIMIT = 3;
