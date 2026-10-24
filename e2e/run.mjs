@@ -1,11 +1,12 @@
 // Recorrido de la interfaz en un navegador real (Playwright + Chrome).
 // Requisitos: npm run dev (y npm run api para el asistente) y 'npm i -D playwright-core'.
 // Uso: node e2e/run.mjs
+import { mkdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 
 const BASE = 'http://localhost:5173';
-const SHOTS = new URL('./capturas', import.meta.url).pathname.replace(/^/([A-Za-z]:)/, '$1');
-import { mkdirSync } from 'node:fs';
+const SHOTS = fileURLToPath(new URL('./capturas', import.meta.url));
 mkdirSync(SHOTS, { recursive: true });
 const resultados = [];
 const errores = [];
