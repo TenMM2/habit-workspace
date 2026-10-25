@@ -54,6 +54,7 @@ export default function AssistantWidget({ abierto, onAbrir, onNecesitaPlan }: Pr
   const [texto, setTexto] = useState('');
   const [pensando, setPensando] = useState(false);
   const contador = useRef(0);
+  const creando = useRef(new Set<number>());
   const fin = useRef<HTMLDivElement>(null);
   const campo = useRef<HTMLInputElement>(null);
 
@@ -84,12 +85,13 @@ export default function AssistantWidget({ abierto, onAbrir, onNecesitaPlan }: Pr
   }
 
   async function crear(burbuja: Burbuja) {
-    if (!user || !burbuja.pagina) return;
+    if (!user || !burbuja.pagina || creando.current.has(burbuja.id)) return;
     if (plan === 'free' && pages.length >= FREE_PAGE_LIMIT) {
       onNecesitaPlan();
       return;
     }
     const p = burbuja.pagina;
+    creando.current.add(burbuja.id); // un doble clic no debe crear la página dos veces
     try {
       const id = await crearPaginaCon(user.uid, {
         title: p.title,
@@ -103,6 +105,7 @@ export default function AssistantWidget({ abierto, onAbrir, onNecesitaPlan }: Pr
       setMensajes((m) => m.map((x) => (x.id === burbuja.id ? { ...x, creada: true } : x)));
       navigate(`/p/${id}`);
     } catch {
+      creando.current.delete(burbuja.id);
       setMensajes((m) => [...m, { id: ++contador.current, rol: 'assistant', texto: 'No pude crear la página. Inténtalo de nuevo.' }]);
     }
   }

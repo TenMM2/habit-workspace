@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { PanelLeft } from 'lucide-react';
 import Sidebar from './Sidebar';
@@ -32,6 +32,8 @@ export default function Layout() {
   const [buscando, setBuscando] = useState(false);
   const [ajustes, setAjustes] = useState<PestanaAjustes | null>(null);
   const [asistente, setAsistente] = useState(false);
+  const [avisoLimite, setAvisoLimite] = useState(false);
+  const creando = useRef(false); // evita páginas duplicadas (y saltarse el límite Free) con clics rápidos
 
   useEffect(() => {
     try {
@@ -53,20 +55,29 @@ export default function Layout() {
     return () => document.removeEventListener('keydown', alTeclear);
   }, []);
 
+  const abrirAjustes = useCallback((pestana: PestanaAjustes, limite = false) => {
+    setAvisoLimite(limite);
+    setAjustes(pestana);
+  }, []);
+
   const nuevaPagina = useCallback(async () => {
-    if (!user) return;
+    if (!user || creando.current) return;
     if (plan === 'free' && pages.length >= FREE_PAGE_LIMIT) {
-      setAjustes('plan');
+      abrirAjustes('plan', true);
       return;
     }
+    creando.current = true;
     try {
       const id = await crearPagina(user.uid, 'Nueva página', profile?.bannerURL ?? DEFAULT_BANNER);
       setCajon(false);
       navigate(`/p/${id}`);
     } catch {
       alert('No se pudo crear la página. Inténtalo de nuevo.');
+    } finally {
+      // Se libera tras un instante para que `pages` ya refleje la página nueva antes de comprobar el límite otra vez
+      setTimeout(() => (creando.current = false), 150);
     }
-  }, [user, plan, pages.length, profile?.bannerURL, navigate]);
+  }, [user, plan, pages.length, profile?.bannerURL, navigate, abrirAjustes]);
 
   const cerrarCajon = () => setCajon(false);
   /** Acciones de la barra lateral; en móvil primero se cierra el cajón. */
@@ -80,9 +91,9 @@ export default function Layout() {
       onNavigate={cerrarCajon}
       onSearch={accion(() => setBuscando(true))}
       onNewPage={() => void nuevaPagina()}
-      onUpgrade={accion(() => setAjustes('plan'))}
+      onUpgrade={accion(() => abrirAjustes('plan'))}
       onAssistant={accion(() => setAsistente(true))}
-      onSettings={accion(() => setAjustes('cuenta'))}
+      onSettings={accion(() => abrirAjustes('cuenta'))}
     />
   );
 
@@ -133,8 +144,8 @@ export default function Layout() {
       </div>
 
       {buscando && <SearchModal onClose={() => setBuscando(false)} />}
-      {ajustes && <SettingsModal inicial={ajustes} onClose={() => setAjustes(null)} />}
-      <AssistantWidget abierto={asistente} onAbrir={setAsistente} onNecesitaPlan={() => setAjustes('plan')} />
+      {ajustes && <SettingsModal inicial={ajustes} avisoLimite={avisoLimite} onClose={() => setAjustes(null)} />}
+      <AssistantWidget abierto={asistente} onAbrir={setAsistente} onNecesitaPlan={() => abrirAjustes('plan', true)} />
     </div>
   );
 }

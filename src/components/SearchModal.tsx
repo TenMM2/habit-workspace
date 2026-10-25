@@ -32,7 +32,20 @@ export default function SearchModal({ onClose }: { onClose: () => void }) {
       })),
     ];
     const t = texto.trim().toLowerCase();
-    return t ? todos.filter((r) => r.etiqueta.toLowerCase().includes(t)) : todos;
+    if (!t) return todos;
+    const coincidencias = todos.filter((r) => r.etiqueta.toLowerCase().includes(t));
+    // También se buscan los hábitos por nombre; llevan a la página que los contiene
+    const habitos: Resultado[] = pages.flatMap((p) =>
+      p.habits
+        .filter((h) => h.name.toLowerCase().includes(t))
+        .map((h) => ({
+          clave: `${p.id}/${h.id}`,
+          etiqueta: `${h.name} — ${p.title}`,
+          ruta: `/p/${p.id}`,
+          icono: <span className="text-sm">{h.emoji}</span>,
+        }))
+    );
+    return [...coincidencias, ...habitos];
   }, [pages, texto]);
 
   function ir(r: Resultado | undefined) {

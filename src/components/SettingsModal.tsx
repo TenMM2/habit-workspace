@@ -13,7 +13,7 @@ const PESTANAS: { id: PestanaAjustes; etiqueta: string; icono: JSX.Element }[] =
   { id: 'plan', etiqueta: 'Planes y facturación', icono: <CreditCard size={15} /> },
 ];
 
-export default function SettingsModal({ inicial, onClose }: { inicial: PestanaAjustes; onClose: () => void }) {
+export default function SettingsModal({ inicial, avisoLimite = false, onClose }: { inicial: PestanaAjustes; avisoLimite?: boolean; onClose: () => void }) {
   const [pestana, setPestana] = useState<PestanaAjustes>(inicial);
 
   return (
@@ -37,7 +37,7 @@ export default function SettingsModal({ inicial, onClose }: { inicial: PestanaAj
       <div role="tabpanel">
         {pestana === 'cuenta' && <AccountPanel />}
         {pestana === 'apariencia' && <AppearancePanel />}
-        {pestana === 'plan' && <PlansPanel />}
+        {pestana === 'plan' && <PlansPanel avisoLimite={avisoLimite} />}
       </div>
     </Modal>
   );

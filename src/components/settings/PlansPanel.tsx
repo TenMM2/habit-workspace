@@ -24,7 +24,7 @@ function Barra({ valor, maximo }: { valor: number; maximo: number | null }) {
 }
 
 /** Gestión de planes SIMULADA: cambia el campo `plan` y genera facturas ficticias; no hay cobro real. */
-export default function PlansPanel() {
+export default function PlansPanel({ avisoLimite = false }: { avisoLimite?: boolean }) {
   const { user } = useAuth();
   const { plan, pages, profile } = useData();
   const accion = useAccion();
@@ -72,6 +72,11 @@ export default function PlansPanel() {
 
   return (
     <div className="grid gap-8">
+      {avisoLimite && plan === 'free' && (
+        <div className="rounded-lg border border-accent bg-accent-soft p-3 text-sm" role="alert">
+          <strong>Has alcanzado el límite del plan Free:</strong> {FREE_PAGE_LIMIT} páginas de hábitos. Mejora a Pro para crear más; tus páginas actuales no se tocan.
+        </div>
+      )}
       <section className="grid gap-3">
         <div className="grid gap-3 sm:grid-cols-2">
           {tarjeta('free', 'Free', '0 €', FREE)}
