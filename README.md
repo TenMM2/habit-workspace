@@ -183,6 +183,4 @@ local use. See [SECURITY.md](SECURITY.md) and sections 4.5 and 9 of the thesis.
 
 ## Author
 
-**Saúl Lázaro Casterad** — Final-year project, Web (DAW) and Multiplatform (DAM) Application Development.
-
-*Transparency note: an AI coding assistant (Claude Code) was used as a support tool during development; see section 3.3 of the thesis.*
+[@TenMM2](https://github.com/TenMM2)
