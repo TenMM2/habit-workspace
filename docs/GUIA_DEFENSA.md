@@ -82,7 +82,7 @@ Habla **mirando al tribunal**, no a la pantalla. Lo que va en *cursiva* es lo qu
 | **6:00–8:00** | **4. El asistente de IA** | Abre el botón flotante. Pregunta «Resumen semanal» (usa tus datos). Luego «Crea una página de inglés» → botón «Crear esta página» → se abre la página nueva. | *«El asistente conoce mis hábitos de los últimos 30 días. La clave de Gemini no está en el navegador: pasa por un proxy en PHP. Si no hay IA, hay modo de respaldo. Y cuando propone una página, la valido y la creo solo si yo confirmo.»* |
 | **8:00–9:30** | **5. Ajustes y planes** | Ajustes → nombre → Apariencia → Planes: «Mejorar a Pro» → aparece la factura. | *«Los planes están simulados: cambia un campo y genera una factura de prueba. En producción haría falta una pasarela real y validación en servidor; está en las líneas futuras.»* |
 | **9:30–11:30** | **6. Arquitectura** | Muestra el diagrama de arquitectura (`docs\diagramas`). | *«Una única interfaz `Backend` con dos implementaciones intercambiables. La interfaz no sabe dónde están los datos. Esto me permitió probarlo todo sin depender de un servicio externo.»* |
-| **11:30–13:30** | **7. Seguridad y pruebas** | En el navegador abre DevTools → Red: enseña que en la petición del asistente **no hay ninguna clave**. Muestra el terminal con `npm test` (35 en verde). | *«Aislamiento por usuario, contraseñas con PBKDF2, bloqueo por fuerza bruta, validación de lo que devuelve la IA. 35 tests unitarios y 50 comprobaciones en navegador real. Además hice pruebas de mutación: rompí la seguridad a propósito y los tests fallaron.»* |
+| **11:30–13:30** | **7. Seguridad y pruebas** | En el navegador abre DevTools → Red: enseña que en la petición del asistente **no hay ninguna clave**. Muestra el terminal con `npm test` (35 en verde). | *«Aislamiento por usuario, contraseñas con PBKDF2, bloqueo por fuerza bruta, validación de lo que devuelve la IA. 35 tests unitarios y 114 comprobaciones en navegador real. Además hice pruebas de mutación: rompí la seguridad a propósito y los tests fallaron.»* |
 | **13:30–14:30** | **8. Multiplataforma** | (a) Navegador en `localhost:4173`: icono de **instalar** en la barra; activa *Sin conexión* en DevTools y recarga: sigue funcionando. (b) Muestra la ventana de escritorio y **Ajustes → Apariencia** («Aplicación de escritorio · Electron 45»). (c) Abre la carpeta `android\`. | *«La misma app es una PWA instalable que funciona sin conexión, un programa de Windows con Electron —con aislamiento de contexto, sin Node en la web y CSP estricta— y tiene la estructura de Capacitor lista para extenderla a Android. El canal móvil que entrego es la PWA; el APK de tienda sería la fase de despliegue móvil.»* |
 | **14:30–15:00** | **9. Cierre** | Vuelve al panel. | *«Cumplo los objetivos: una aplicación completa, segura y probada, con un enfoque Local-First y unos límites de alcance que he documentado: el límite del plan Free solo está en la interfaz, y los adaptadores cloud —Firebase y el APK— quedan como fase de despliegue. Líneas futuras: …. Gracias, quedo a su disposición.»* |
 
@@ -106,7 +106,7 @@ Habla **mirando al tribunal**, no a la pantalla. Lo que va en *cursiva* es lo qu
 > adaptadores de Firebase como arquitectura extensible hacia la nube. Si hay claves en `.env` se usa la nube; si no, la local. El modo local
 > me da **soberanía del dato** y **privacidad total** —los datos no salen del dispositivo—, **coste de infraestructura cero**, y la app
 > **funciona 100 % sin conexión** gracias a IndexedDB, la PWA y el ejecutable de Electron; además puedo probarlo todo sin depender de un servicio
-> externo, y las 85 pruebas automáticas corren así. La local no es de juguete: tiene usuarios, contraseñas con PBKDF2, sesiones con caducidad y
+> externo, y las pruebas automáticas corren así. La local no es de juguete: tiene usuarios, contraseñas con PBKDF2, sesiones con caducidad y
 > aislamiento entre usuarios. La contrapartida es que los datos viven solo en ese dispositivo; sincronizar entre dispositivos sería la fase cloud,
 > activando el adaptador de Firebase.*
 
@@ -187,9 +187,10 @@ Habla **mirando al tribunal**, no a la pantalla. Lo que va en *cursiva* es lo qu
 
 ### 10. «¿Qué pruebas has hecho de verdad y qué NO cubren?»
 
-> *Tengo **35 pruebas unitarias** y **50 comprobaciones en navegador real**: 23 de la web en Chrome, 11 de la PWA —incluida la instalabilidad según Chrome y el uso
+> *Tengo **35 pruebas unitarias** y **114 comprobaciones en navegador real**: 23 de la web en Chrome, 64 de una auditoría QA que recorre las 8 áreas de la aplicación, 11 de la PWA —incluida la instalabilidad según Chrome y el uso
 > sin conexión— y 16 de Electron, que ejecuto también contra el `.exe` empaquetado. Todas pasan. Algo de lo que estoy orgulloso: las pruebas de
-> navegador me encontraron **dos errores reales** que los unitarios no vieron —una redirección al recargar una página y un avatar tapado por el banner—, y los corregí.
+> navegador me encontraron **errores reales** que los unitarios no vieron —una redirección al recargar una página, un avatar tapado por el banner, y en la auditoría
+> final una condición de carrera que duplicaba páginas con un doble clic y que podía saltarse el límite del plan gratuito—, y los corregí.
 > También hice pruebas de mutación para comprobar que los tests detectan fallos.*
 >
 > *Lo que **no cubren**, por pertenecer a la fase de despliegue cloud: los adaptadores de Firebase —ni las reglas contra el emulador ni el login

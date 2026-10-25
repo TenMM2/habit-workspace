@@ -51,8 +51,8 @@ de datos local en IndexedDB con usuarios, contraseñas con hash PBKDF2, sesiones
 no hay claves de Firebase.
 
 La clave de la API de Gemini nunca llega al navegador: las peticiones pasan por un proxy en PHP que valida el origen, el tamaño y la
-frecuencia, y el asistente dispone de un modo de respaldo sin IA. La calidad se ha verificado con **35 pruebas unitarias y 50
-comprobaciones automatizadas en navegador real** (Chrome y Electron), todas superadas.
+frecuencia, y el asistente dispone de un modo de respaldo sin IA. La calidad se ha verificado con **35 pruebas unitarias y 114
+comprobaciones automatizadas en navegador real** (Chrome y Electron; 149 en total), todas superadas.
 
 **Palabras clave:** hábitos, productividad, React, TypeScript, PWA, Electron, Capacitor, Firebase, IndexedDB, PHP, Gemini, seguridad.
 
@@ -69,7 +69,7 @@ IndexedDB database with users, PBKDF2-hashed passwords, sessions and per-user is
 are absent.
 
 The Gemini API key never reaches the browser: requests go through a PHP proxy that validates origin, size and rate, and the assistant has
-an AI-free fallback mode. Quality was verified with **35 unit tests and 50 automated checks in real browsers** (Chrome and Electron), all
+an AI-free fallback mode. Quality was verified with **35 unit tests and 114 automated checks in real browsers** (Chrome and Electron; 149 in total), all
 passing.
 
 **Keywords:** habits, productivity, React, TypeScript, PWA, Electron, Capacitor, Firebase, IndexedDB, PHP, Gemini, security.
@@ -348,7 +348,7 @@ experiencia completa sin conexión.
 vía de despliegue cloud (sincronización entre dispositivos, distribución en tiendas móviles) queda como línea de evolución del
 proyecto (apartado 12.3).
 
-**Alcance de la verificación.** Las pruebas automatizadas del entregable (35 unitarias y 50 en navegador real) validan el modo principal,
+**Alcance de la verificación.** Las pruebas automatizadas del entregable (35 unitarias y 114 en navegador real) validan el modo principal,
 Local-First, en la web, la PWA y Electron. Los adaptadores cloud (Firebase y compilación Android) forman parte de la arquitectura
 extensible y **no se han validado contra servicios reales** en esta entrega: su verificación corresponde a la fase de despliegue cloud.
 
@@ -577,6 +577,7 @@ Todas las cifras proceden de ejecuciones reales realizadas sobre el código entr
 | Empaquetado | `vite build` | — | Correcto (1,0 MB de JS, 268 KB comprimido) |
 | **Unitarias** | Vitest + fake-indexeddb | **35** (2 archivos) | **35 superadas** |
 | **E2E web** (Chrome) | Playwright | **23** pasos | **23 superados**, 0 errores de consola |
+| **Auditoría QA web** (Chrome) | Playwright | **64** comprobaciones en 8 bloques | **64 superadas**, 0 errores de consola |
 | **E2E PWA** (Chrome) | Playwright + CDP | **11** pasos | **11 superados** |
 | **E2E Electron** (también el `.exe` empaquetado) | Playwright `_electron` | **16** pasos | **16 superados** |
 | Proxy PHP | `curl` contra el servidor real | 11 peticiones | Códigos esperados (405, 403, 415, 400, 413, 204, 200…) |
@@ -593,10 +594,27 @@ Todas las cifras proceden de ejecuciones reales realizadas sobre el código entr
 
 **Pruebas de mutación.** Para comprobar que los tests detectan fallos reales, se desactivó a propósito el bloqueo por intentos y la comprobación de propietario: **3 tests fallaron** como debían, y al restaurar el código volvieron a pasar los 35.
 
-### 10.2 Pruebas en navegador real (50)
+### 10.2 Pruebas en navegador real (114)
 
 **Web, 23 pasos** (`e2e/run.mjs`): ruta protegida; login erróneo y correcto con vuelta a la ruta pedida; dashboard; página de hábitos completa; ausencia de scroll horizontal en escritorio **y** a 390 px; marcar un hábito y comprobar que persiste tras recargar; edición del título en el sitio; añadir reglas y hábitos; filtro de pendientes; cambio de tema; buscador `Ctrl+K`;
 ajustes (nombre, validación de contraseña, apariencia, mejora a Pro con factura); asistente (pregunta y creación de página); cierre de sesión; registro de un usuario nuevo comprobando que **no ve** las páginas de otro; cajón lateral móvil.
+
+**Auditoría QA web, 64 comprobaciones** (`e2e/auditoria.mjs`), organizadas en los 8 bloques de la aplicación: (1) acceso, registro, recuperación de contraseña, rutas protegidas y bloqueo por fuerza bruta con desbloqueo a los 60 s; (2) barra lateral, cajón móvil y buscador; (3) panel; (4) páginas dinámicas: banner, avatar, título, cita, reglas, tracker con hasta 8 hábitos, notas y filtros, sin scroll horizontal a 1280, 390 y 320 px; (5) calendario; (6) límite Free, plan Pro simulado, vuelta a Free y ajustes de cuenta; (7) asistente, con y sin red, y resistencia a inyección de instrucciones y a `<script>`; (8) clics repetidos y consola sin errores. Se ejecutó repetidas veces hasta que todas pasaron. El asistente se auditó en su modo de respaldo (sin el proxy PHP en marcha); la respuesta real de Gemini se verifica aparte, a mano, para no gastar la cuota gratuita.
+
+#### Defectos hallados por la auditoría y corregidos
+
+La auditoría encontró defectos reales que los tests unitarios no podían ver. Se corrigieron y la suite vuelve a pasar completa.
+
+| # | Defecto | Causa | Corrección |
+|---|---|---|---|
+| 1 | Un doble clic en «Crear esta página» del asistente creaba **dos páginas** | El botón solo se deshabilitaba cuando terminaba la operación asíncrona (condición de carrera) | Registro de propuestas en curso que ignora el segundo clic |
+| 2 | Clics muy rápidos en «+» podían duplicar páginas o **superar el límite del plan Free** | La comprobación del límite usaba una lista de páginas aún sin actualizar | Cerrojo de creación en curso en `Layout` |
+| 3 | Al alcanzar el límite Free se abría el modal de planes **sin explicar el motivo** | El modal no recibía la causa | Aviso explícito: «Has alcanzado el límite del plan Free: 3 páginas…» |
+| 4 | En el calendario, pulsar un día **no hacía nada** | Los días eran elementos no interactivos | Cada día es un botón que muestra sus hábitos hechos y pendientes y la nota; un test lo contrasta con los datos reales |
+| 5 | El buscador `Ctrl+K` **solo encontraba páginas**, no hábitos | Solo se indexaban los títulos de página | Los hábitos se indexan por nombre y llevan a su página |
+| 6 | Avisos repetidos de React Router en la consola (66 mensajes) | Banderas de la v7 sin activar | `future` flags activadas en el enrutador |
+
+Además se descartaron falsos positivos propios de la prueba (por ejemplo, selectores que coincidían con la cabecera de la aplicación y no con la de la página); no se cuentan como defectos de la aplicación.
 
 **PWA, 11 pasos** (`e2e/pwa.mjs`): manifest e iconos válidos; **Chrome no detecta errores de instalabilidad**; el Service Worker toma el control; el *app shell* queda en caché; **sin conexión**: arranque, uso de la app, recarga en una ruta profunda y asistente en modo de respaldo; `/api/` nunca en caché; sin desbordamiento en móvil.
 
@@ -641,7 +659,7 @@ Esta sección recoge incidencias reales del proceso, porque las decisiones técn
 | O8 | Escritorio con Electron, seguro | ✅ Cumplido (`.exe` verificado) | E2E Electron |
 | O9 | Estructura Capacitor | 🟡 Estructura lista y sincronizada (arquitectura extensible); la distribución móvil entregada es la PWA; el APK de tienda queda como línea futura | `android/` |
 | O10 | Una sola base de código | ✅ Cumplido | Misma `src/` en los cuatro canales |
-| O11 | Pruebas automatizadas | ✅ Cumplido | 85 comprobaciones |
+| O11 | Pruebas automatizadas | ✅ Cumplido | 149 comprobaciones |
 
 ### 12.2 Conclusiones
 
@@ -695,7 +713,7 @@ habit-workspace/
 ├── android/              Proyecto Capacitor (sincronizado)
 ├── public/               manifest, sw.js, iconos, theme-init.js
 ├── tests/                35 pruebas unitarias
-├── e2e/                  50 comprobaciones en navegador (web, PWA, Electron)
+├── e2e/                  114 comprobaciones en navegador (web, auditoría QA, PWA, Electron)
 ├── scripts/              iconos, empaquetado, lanzador de Electron, exportar diagramas
 ├── docs/                 Esta memoria, guía de defensa y guía multiplataforma
 ├── firestore.rules · storage.rules · capacitor.config.ts · SECURITY.md · README.md

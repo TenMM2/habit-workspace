@@ -18,7 +18,7 @@
 ![Electron](https://img.shields.io/badge/Electron-45-47848F?logo=electron&logoColor=white)
 ![Capacitor](https://img.shields.io/badge/Capacitor-8-119EFF?logo=capacitor&logoColor=white)
 ![Unit tests](https://img.shields.io/badge/unit%20tests-35%20passing-brightgreen)
-![E2E](https://img.shields.io/badge/E2E%20checks-50%20passing-brightgreen)
+![E2E](https://img.shields.io/badge/E2E%20checks-114%20passing-brightgreen)
 
 [Security](SECURITY.md) · [Multiplatform guide](docs/MULTIPLATAFORMA.md) · [Thesis (ES)](docs/MEMORIA_TFG.md) · [Defense guide (ES)](docs/GUIA_DEFENSA.md)
 
@@ -77,10 +77,11 @@ startup. Full diagrams (architecture, data model, auth and AI flows) are in the 
 | Production build | `vite build` | ✅ (≈1.0 MB JS · 268 KB gzipped) |
 | Unit / integration | Vitest + fake-indexeddb | ✅ **35 / 35** |
 | E2E — web (Chrome) | Playwright | ✅ **23 / 23** |
+| E2E — full QA audit (8 areas: auth, navigation, dashboard, pages, calendar, plans, AI assistant, race conditions) | Playwright | ✅ **64 / 64** |
 | E2E — PWA installability & **offline mode** | Playwright + CDP | ✅ **11 / 11** |
 | E2E — Electron (also against the packaged `.exe`) | Playwright `_electron` | ✅ **16 / 16** |
 
-That is **35 unit tests + 50 E2E checks** across Web, PWA and Electron. Beyond passing, the tests were verified to *catch regressions*: the brute-force
+That is **35 unit tests + 114 E2E checks (149 in total)** across Web, PWA and Electron. The QA audit surfaced and fixed real defects, including a double-click race condition that created duplicate pages and could bypass the Free-plan limit. Beyond passing, the tests were verified to *catch regressions*: the brute-force
 lockout and the cross-user isolation were deliberately broken, and the corresponding tests failed.
 
 ## Getting started
@@ -143,6 +144,7 @@ npm run cap:android     # build + sync + open Android Studio (requires the Andro
 ```bash
 npm test                  # 35 unit tests
 node e2e/run.mjs          # 23 web checks   (with `npm run dev` running)
+node e2e/auditoria.mjs    # 64-check QA audit (with `npm run dev` running; ~4 min)
 node e2e/pwa.mjs          # 11 PWA checks   (with `npm run preview` running)
 node e2e/electron.mjs     # 16 Electron checks
 ```
@@ -177,7 +179,7 @@ The project is **Local-First and Offline-First**: data lives on the user's devic
 and full offline operation in both the PWA and the Electron app. The **Firebase** and **Capacitor** adapters are implemented as an **extensible
 architecture** for a future cloud deployment (cross-device sync, app stores).
 
-Verified scope, stated plainly: the test suites validate the primary local mode; the cloud adapters (Firebase, Android APK) have **not been validated
+Verified scope, stated plainly: the test suites validate the primary local mode (the AI assistant is exercised in its fallback mode; live Gemini calls are checked manually); the cloud adapters (Firebase, Android APK) have **not been validated
 against real services** in this release; **payments are simulated** and the Free-plan limit is enforced in the UI only; the PHP proxy is designed for
 local use. See [SECURITY.md](SECURITY.md) and sections 4.5 and 9 of the thesis.
 
