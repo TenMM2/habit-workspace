@@ -3,7 +3,7 @@ import type { AppUser, DayEntry, HabitPage, Profile } from '../types';
 export type Unsub = () => void;
 export type OnError = (e: unknown) => void;
 
-export type ProfileChanges = Partial<Pick<Profile, 'displayName' | 'photoURL' | 'bannerURL' | 'plan' | 'billing'>>;
+export type ProfileChanges = Partial<Pick<Profile, 'displayName' | 'photoURL' | 'bannerURL' | 'plan' | 'billing' | 'onboarding'>>;
 export type PageChanges = Partial<Omit<HabitPage, 'id'>>;
 
 /**

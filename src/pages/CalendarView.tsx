@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useAllDays } from '../hooks/useDays';
 import { dayNumber, monthDays, monthLabel, parseISO, shiftMonth, todayISO } from '../lib/dates';
+import { marcarPaso } from '../lib/onboarding';
 import { resumenDia } from '../lib/stats';
 
 const CABECERA = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
@@ -40,7 +41,7 @@ export default function CalendarView() {
           <div key={d}>{d}</div>
         ))}
       </div>
-      <div className="mt-1.5 grid grid-cols-7 gap-1.5">
+      <div className="mt-1.5 grid grid-cols-7 gap-1.5" data-tour="calendario-grid">
         {Array.from({ length: huecos }, (_, i) => (
           <div key={`h${i}`} />
         ))}
@@ -55,7 +56,10 @@ export default function CalendarView() {
               title={`${f}: ${hechos}/${total}`}
               aria-label={`Día ${dayNumber(f)}: ${hechos} de ${total} hábitos`}
               aria-pressed={elegido === f}
-              onClick={() => setElegido(elegido === f ? null : f)}
+              onClick={() => {
+                setElegido(elegido === f ? null : f);
+                if (user) marcarPaso(user.uid, 'calendario');
+              }}
               className={`grid aspect-square place-items-center rounded-md border text-sm ${f === hoy ? 'border-accent' : 'border-line'} ${elegido === f ? 'ring-2 ring-accent' : ''} ${futuro ? 'opacity-40' : ''}`}
               style={ratio > 0 ? { background: `color-mix(in srgb, var(--accent) ${Math.round(20 + ratio * 70)}%, transparent)` } : undefined}
             >

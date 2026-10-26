@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { CalendarDays, ChevronUp, Home, LogOut, Plus, Search, Settings, Sparkles } from 'lucide-react';
+import { CalendarDays, ChevronUp, GraduationCap, Home, LogOut, Plus, Search, Settings, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { FREE_PAGE_LIMIT } from '../types';
@@ -12,12 +12,13 @@ interface Props {
   onUpgrade: () => void;
   onAssistant: () => void;
   onSettings: () => void;
+  onTour: () => void;
 }
 
 const enlace = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-hover ${isActive ? 'bg-hover font-medium' : 'text-muted'}`;
 
-export default function Sidebar({ onNavigate, onSearch, onNewPage, onUpgrade, onAssistant, onSettings }: Props) {
+export default function Sidebar({ onNavigate, onSearch, onNewPage, onUpgrade, onAssistant, onSettings, onTour }: Props) {
   const { user, logout } = useAuth();
   const { pages, plan, profile } = useData();
   const [menu, setMenu] = useState(false);
@@ -45,11 +46,14 @@ export default function Sidebar({ onNavigate, onSearch, onNewPage, onUpgrade, on
         <NavLink to="/calendario" className={enlace} onClick={onNavigate}>
           <CalendarDays size={16} /> Calendario
         </NavLink>
+        <button type="button" className={enlace({ isActive: false })} onClick={onTour}>
+          <GraduationCap size={16} /> Ver tutorial de la app
+        </button>
       </nav>
 
       <div className="mt-3 flex items-center justify-between px-2 text-xs font-medium uppercase tracking-wide text-muted">
         Mis páginas de hábitos
-        <button type="button" className="rounded p-1 hover:bg-hover" onClick={onNewPage} aria-label="Añadir nueva página">
+        <button type="button" className="rounded p-1 hover:bg-hover" onClick={onNewPage} aria-label="Añadir nueva página" data-tour="nueva-pagina">
           <Plus size={14} />
         </button>
       </div>

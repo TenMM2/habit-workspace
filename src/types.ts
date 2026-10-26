@@ -32,6 +32,13 @@ export interface Invoice {
   amount: number; // euros
 }
 
+/** Progreso del onboarding («Primeros pasos» y tour guiado). Se guarda en el perfil del usuario. */
+export interface Onboarding {
+  pasos: string[]; // ids de los pasos completados
+  oculto: boolean; // el usuario ocultó el panel de primeros pasos
+  tourVisto: boolean; // el tour ya se mostró (o se saltó): no vuelve a lanzarse solo
+}
+
 export interface Profile {
   displayName: string;
   email: string;
@@ -39,6 +46,7 @@ export interface Profile {
   bannerURL: string | null; // banner por defecto de las páginas nuevas
   plan: Plan;
   billing: Invoice[];
+  onboarding?: Onboarding; // ausente en cuentas anteriores a esta función
 }
 
 /** Usuario autenticado, independiente del backend (Firebase o local). */

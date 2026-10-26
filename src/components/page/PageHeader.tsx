@@ -57,7 +57,7 @@ export default function PageHeader({ page, onChange, onDelete }: Props) {
   }
 
   return (
-    <header>
+    <header data-tour="cabecera">
       {/* Banner */}
       <div className="group relative h-40 w-full overflow-hidden bg-hover sm:h-52" style={gradiente ? { background: gradiente } : undefined}>
         {!gradiente && <img src={page.bannerURL} alt="" className="h-full w-full object-cover" referrerPolicy="no-referrer" />}

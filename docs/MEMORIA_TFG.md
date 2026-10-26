@@ -51,8 +51,8 @@ de datos local en IndexedDB con usuarios, contraseñas con hash PBKDF2, sesiones
 no hay claves de Firebase.
 
 La clave de la API de Gemini nunca llega al navegador: las peticiones pasan por un proxy en PHP que valida el origen, el tamaño y la
-frecuencia, y el asistente dispone de un modo de respaldo sin IA. La calidad se ha verificado con **35 pruebas unitarias y 114
-comprobaciones automatizadas en navegador real** (Chrome y Electron; 149 en total), todas superadas.
+frecuencia, y el asistente dispone de un modo de respaldo sin IA. La calidad se ha verificado con **49 pruebas unitarias y 138
+comprobaciones automatizadas en navegador real** (Chrome y Electron; 187 en total), todas superadas.
 
 **Palabras clave:** hábitos, productividad, React, TypeScript, PWA, Electron, Capacitor, Firebase, IndexedDB, PHP, Gemini, seguridad.
 
@@ -69,7 +69,7 @@ IndexedDB database with users, PBKDF2-hashed passwords, sessions and per-user is
 are absent.
 
 The Gemini API key never reaches the browser: requests go through a PHP proxy that validates origin, size and rate, and the assistant has
-an AI-free fallback mode. Quality was verified with **35 unit tests and 114 automated checks in real browsers** (Chrome and Electron; 149 in total), all
+an AI-free fallback mode. Quality was verified with **49 unit tests and 138 automated checks in real browsers** (Chrome and Electron; 187 in total), all
 passing.
 
 **Keywords:** habits, productivity, React, TypeScript, PWA, Electron, Capacitor, Firebase, IndexedDB, PHP, Gemini, security.
@@ -348,7 +348,7 @@ experiencia completa sin conexión.
 vía de despliegue cloud (sincronización entre dispositivos, distribución en tiendas móviles) queda como línea de evolución del
 proyecto (apartado 12.3).
 
-**Alcance de la verificación.** Las pruebas automatizadas del entregable (35 unitarias y 114 en navegador real) validan el modo principal,
+**Alcance de la verificación.** Las pruebas automatizadas del entregable (49 unitarias y 138 en navegador real) validan el modo principal,
 Local-First, en la web, la PWA y Electron. Los adaptadores cloud (Firebase y compilación Android) forman parte de la arquitectura
 extensible y **no se han validado contra servicios reales** en esta entrega: su verificación corresponde a la fase de despliegue cloud.
 
@@ -455,6 +455,8 @@ por lo que **no hay scroll horizontal** ni en móvil.
 
 **Fase 3 — Cuenta, planes y asistente.** Ajustes con tres pestañas: cuenta y perfil (nombre, foto, banner por defecto, correo, contraseña), apariencia y planes y
 facturación (Free/Pro **simulados**, uso del espacio de trabajo e historial de facturas ficticias). Asistente flotante con proxy PHP (sección 7).
+
+**Onboarding y tour interactivo.** Para guiar al usuario nuevo se añadió un sistema propio, sin librerías externas. (1) Un panel de **«Primeros pasos»** en el Dashboard con 7 pasos numerados —cada uno con su título, el motivo por el que importa y su estado `✓ Hecho` o un botón `Hacerlo`—, una barra de progreso y un título dinámico («Primeros pasos: *X* pendientes para empezar», «¡Todo listo!» al llegar a 0). El progreso **no depende de botones de «marcar como hecho»**: los pasos se completan cuando el usuario realiza la acción real (crear una página, editar la cita o las reglas, añadir un hábito, marcar una casilla, pulsar un día del calendario, preguntar al asistente, cambiar su foto) y se guardan en el perfil, en IndexedDB. El panel se puede **ocultar** (queda un botón discreto «Mostrar primeros pasos (*X*)», también disponible en Ajustes → Apariencia) y **reiniciar**. (2) Un **tour guiado** (`<OnboardingTour />`) con ventanitas flotantes: oscurece la pantalla, ilumina con un borde el elemento real al que apunta el paso (posición calculada con `getBoundingClientRect()`, que se recalcula al redimensionar, hacer scroll o moverse el elemento), muestra «Paso *X* de 7» con puntos de progreso, y se controla con `Anterior`, `Siguiente`, `Finalizar`, `Saltar tutorial` y el teclado (← → Esc). Navega solo entre pantallas (Dashboard, página de hábitos, calendario), abre y cierra el modal de Ajustes y el asistente cuando el paso lo necesita, y en móvil se comporta como una hoja inferior. Se lanza automáticamente **solo la primera vez que se registra una cuenta**; después, desde el panel, la barra lateral («Ver tutorial de la app») o Ajustes; y el botón `Hacerlo` de cada paso abre el tour en ese paso. Las cuentas anteriores a esta función deducen los pasos que sus datos ya demuestran, y la cuenta demo arranca con pasos mezclados (hechos y pendientes) para poder enseñar el panel en la defensa.
 
 **Fase 4 — Multiplataforma.** PWA instalable con uso sin conexión, aplicación de escritorio con Electron (ejecutable de Windows) y proyecto Android de Capacitor
 sincronizado (sección 8).
@@ -575,14 +577,15 @@ Todas las cifras proceden de ejecuciones reales realizadas sobre el código entr
 |---|---|---|---|
 | Compilación estricta | `tsc --noEmit` | todo `src/` | Sin errores |
 | Empaquetado | `vite build` | — | Correcto (1,0 MB de JS, 268 KB comprimido) |
-| **Unitarias** | Vitest + fake-indexeddb | **35** (2 archivos) | **35 superadas** |
+| **Unitarias** | Vitest + fake-indexeddb | **49** (3 archivos) | **49 superadas** |
 | **E2E web** (Chrome) | Playwright | **23** pasos | **23 superados**, 0 errores de consola |
 | **Auditoría QA web** (Chrome) | Playwright | **64** comprobaciones en 8 bloques | **64 superadas**, 0 errores de consola |
+| **E2E onboarding y tour** (Chrome) | Playwright | **23** pasos | **23 superados**, 0 errores de consola |
 | **E2E PWA** (Chrome) | Playwright + CDP | **11** pasos | **11 superados** |
-| **E2E Electron** (también el `.exe` empaquetado) | Playwright `_electron` | **16** pasos | **16 superados** |
+| **E2E Electron** (también el `.exe` empaquetado) | Playwright `_electron` | **17** pasos | **17 superados** |
 | Proxy PHP | `curl` contra el servidor real | 11 peticiones | Códigos esperados (405, 403, 415, 400, 413, 204, 200…) |
 
-### 10.1 Pruebas unitarias (35)
+### 10.1 Pruebas unitarias (49)
 
 - **Autenticación (6):** mismo error con contraseña errónea o usuario inexistente; bloqueo tras 5 intentos; registro y validaciones; contraseña nunca en claro (PBKDF2 con sal distinta por usuario); cambio de contraseña y de correo.
 - **Sesiones (3):** sobrevive a una recarga; se destruye al cerrar sesión; una sesión caducada se descarta.
@@ -590,11 +593,12 @@ Todas las cifras proceden de ejecuciones reales realizadas sobre el código entr
 - **Datos (4):** CRUD de páginas con borrado en cascada; marcas y notas; suscripciones en tiempo real que dejan de recibir al cancelarse; validaciones de título, hábitos y fechas.
 - **Perfil, plan y persistencia (3):** cambios válidos y rechazo de valores inválidos; el perfil nunca expone el hash; los datos sobreviven a una nueva instancia (cerrar y abrir el navegador).
 - **Demo (2):** la cuenta demo existe con su historial y no se vuelve a crear.
+- **Onboarding (14):** los 7 pasos están completos y son únicos; recuento de pendientes; deducción de pasos para cuentas antiguas; una cuenta nueva empieza con el tour sin ver; la demo arranca con pasos mezclados; el progreso, el ocultar y el reiniciar sobreviven a una nueva instancia; se rechazan estados con forma inválida; un usuario no puede tocar el onboarding de otro; y el cálculo de posición de la ventanita nunca la saca de la pantalla (barrido de 4 resoluciones y decenas de posiciones del elemento).
 - **Asistente y estadísticas (15):** cálculo de rachas y porcentajes; el contexto respeta su límite; validación de páginas propuestas por la IA (tipos, longitudes, cantidades, JSON roto); modo de respaldo (intenciones, plantillas, sin páginas).
 
 **Pruebas de mutación.** Para comprobar que los tests detectan fallos reales, se desactivó a propósito el bloqueo por intentos y la comprobación de propietario: **3 tests fallaron** como debían, y al restaurar el código volvieron a pasar los 35.
 
-### 10.2 Pruebas en navegador real (114)
+### 10.2 Pruebas en navegador real (138)
 
 **Web, 23 pasos** (`e2e/run.mjs`): ruta protegida; login erróneo y correcto con vuelta a la ruta pedida; dashboard; página de hábitos completa; ausencia de scroll horizontal en escritorio **y** a 390 px; marcar un hábito y comprobar que persiste tras recargar; edición del título en el sitio; añadir reglas y hábitos; filtro de pendientes; cambio de tema; buscador `Ctrl+K`;
 ajustes (nombre, validación de contraseña, apariencia, mejora a Pro con factura); asistente (pregunta y creación de página); cierre de sesión; registro de un usuario nuevo comprobando que **no ve** las páginas de otro; cajón lateral móvil.
@@ -614,11 +618,15 @@ La auditoría encontró defectos reales que los tests unitarios no podían ver. 
 | 5 | El buscador `Ctrl+K` **solo encontraba páginas**, no hábitos | Solo se indexaban los títulos de página | Los hábitos se indexan por nombre y llevan a su página |
 | 6 | Avisos repetidos de React Router en la consola (66 mensajes) | Banderas de la v7 sin activar | `future` flags activadas en el enrutador |
 
+Las pruebas del onboarding encontraron otros dos defectos mientras se desarrollaba la función, ya corregidos: (a) la tecla **Esc se perdía** si había un modal abierto, porque al volver a registrarse el oyente del tour en mitad del mismo evento dejaba de recibirlo (solución: un único oyente en fase de captura que lee siempre las últimas funciones desde una referencia); y (b) el tour **reaparecía al recargar** si se recargaba justo después de cerrarlo, porque «visto» se guardaba al cerrar (solución: guardarlo al lanzarlo).
+
 Además se descartaron falsos positivos propios de la prueba (por ejemplo, selectores que coincidían con la cabecera de la aplicación y no con la de la página); no se cuentan como defectos de la aplicación.
+
+**Onboarding y tour, 23 pasos** (`e2e/onboarding.mjs`): el tour se lanza solo al registrarse y no reaparece tras recargar; el panel muestra «Primeros pasos: 7 pendientes para empezar»; cada `Hacerlo` (los 7) lleva al elemento correcto, lo ilumina con el foco y, al realizar la acción, el paso pasa a `✓ Hecho`; llegar a «¡Todo listo!»; persistencia tras recargar; `Reiniciar pasos`; `Ocultar` y volver a mostrar (persistente); contraer y expandir; recorrido completo con `Siguiente` por los 7 pasos cambiando de pantalla; `Anterior`; teclado (← → Esc); `Saltar tutorial` y `Finalizar`; lanzarlo desde la barra lateral y desde Ajustes; en móvil (390 px) la ventanita cabe en pantalla en los 7 pasos y no hay scroll lateral; la cuenta demo muestra estados mezclados; y consola limpia.
 
 **PWA, 11 pasos** (`e2e/pwa.mjs`): manifest e iconos válidos; **Chrome no detecta errores de instalabilidad**; el Service Worker toma el control; el *app shell* queda en caché; **sin conexión**: arranque, uso de la app, recarga en una ruta profunda y asistente en modo de respaldo; `/api/` nunca en caché; sin desbordamiento en móvil.
 
-**Electron, 16 pasos** (`e2e/electron.mjs`; se ejecutan tanto con `electron .` como contra el `.exe` empaquetado): carga por `app://`; **sin `require`, `process` ni `Buffer`** en la página; `contextBridge` de solo lectura; **CSP bloquea scripts en línea y `eval`**; sin *path traversal*; proxy restringido a una ruta; uso completo de la aplicación; recarga en ruta profunda; ventana nueva y navegación externa bloqueadas.
+**Electron, 17 pasos** (`e2e/electron.mjs`, que incluye el panel y el tour en escritorio; se ejecutan tanto con `electron .` como contra el `.exe` empaquetado): carga por `app://`; **sin `require`, `process` ni `Buffer`** en la página; `contextBridge` de solo lectura; **CSP bloquea scripts en línea y `eval`**; sin *path traversal*; proxy restringido a una ruta; uso completo de la aplicación; recarga en ruta profunda; ventana nueva y navegación externa bloqueadas.
 
 ### 10.3 Qué no cubren las pruebas
 
@@ -659,7 +667,7 @@ Esta sección recoge incidencias reales del proceso, porque las decisiones técn
 | O8 | Escritorio con Electron, seguro | ✅ Cumplido (`.exe` verificado) | E2E Electron |
 | O9 | Estructura Capacitor | 🟡 Estructura lista y sincronizada (arquitectura extensible); la distribución móvil entregada es la PWA; el APK de tienda queda como línea futura | `android/` |
 | O10 | Una sola base de código | ✅ Cumplido | Misma `src/` en los cuatro canales |
-| O11 | Pruebas automatizadas | ✅ Cumplido | 149 comprobaciones |
+| O11 | Pruebas automatizadas | ✅ Cumplido | 187 comprobaciones |
 
 ### 12.2 Conclusiones
 
@@ -712,8 +720,8 @@ habit-workspace/
 ├── electron/             main.cjs y preload.cjs (escritorio)
 ├── android/              Proyecto Capacitor (sincronizado)
 ├── public/               manifest, sw.js, iconos, theme-init.js
-├── tests/                35 pruebas unitarias
-├── e2e/                  114 comprobaciones en navegador (web, auditoría QA, PWA, Electron)
+├── tests/                49 pruebas unitarias
+├── e2e/                  138 comprobaciones en navegador (web, auditoría QA, onboarding, PWA, Electron)
 ├── scripts/              iconos, empaquetado, lanzador de Electron, exportar diagramas
 ├── docs/                 Esta memoria, guía de defensa y guía multiplataforma
 ├── firestore.rules · storage.rules · capacitor.config.ts · SECURITY.md · README.md
@@ -728,7 +736,7 @@ habit-workspace/
 | `npm run api` | Proxy PHP del asistente (http://localhost:8787) |
 | `npm run desktop` | Compila y abre la aplicación de escritorio |
 | `npm run desktop:pack` | Genera `release/HabitWorkspace-win32-x64/HabitWorkspace.exe` |
-| `npm test` | 35 pruebas unitarias |
+| `npm test` | 49 pruebas unitarias |
 | `npm run build` | `tsc` + `vite build` |
 | `node e2e/run.mjs` · `e2e/pwa.mjs` · `e2e/electron.mjs` | Pruebas en navegador real |
 | `npm run cap:android` | Sincroniza y abre el proyecto Android |

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
@@ -5,6 +6,7 @@ import PageHeader from '../components/page/PageHeader';
 import RulesSection from '../components/page/RulesSection';
 import Tracker from '../components/page/Tracker';
 import { actualizarPagina, borrarPagina } from '../lib/db';
+import { marcarPaso } from '../lib/onboarding';
 import type { HabitPage } from '../types';
 
 export default function HabitPageView() {
@@ -13,8 +15,15 @@ export default function HabitPageView() {
   const { pages, loading } = useData();
   const navigate = useNavigate();
 
-  if (!user) return null;
   const page = pages.find((p) => p.id === pageId);
+  const uid = user?.uid;
+  const existe = Boolean(page);
+  // Abrir una página cuenta como «primera página» del onboarding
+  useEffect(() => {
+    if (uid && existe) marcarPaso(uid, 'pagina');
+  }, [uid, existe]);
+
+  if (!user) return null;
 
   if (loading) return <p className="p-8 text-muted" role="status">Cargando…</p>;
   if (!page) return <Navigate to="/" replace />;

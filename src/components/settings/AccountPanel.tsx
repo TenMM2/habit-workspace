@@ -9,9 +9,9 @@ import { comprimirImagen } from '../../lib/image';
 import Estado from './Estado';
 import { useAccion } from './useAccion';
 
-function Seccion({ titulo, children }: { titulo: string; children: React.ReactNode }) {
+function Seccion({ titulo, children, tour }: { titulo: string; children: React.ReactNode; tour?: string }) {
   return (
-    <section className="grid gap-3 border-b border-line pb-6 last:border-0">
+    <section className="grid gap-3 border-b border-line pb-6 last:border-0" data-tour={tour}>
       <h3 className="font-semibold">{titulo}</h3>
       {children}
     </section>
@@ -81,7 +81,7 @@ export default function AccountPanel() {
 
   return (
     <div className="grid gap-6">
-      <Seccion titulo="Foto de perfil">
+      <Seccion titulo="Foto de perfil" tour="perfil-foto">
         <div className="flex items-center gap-4">
           {profile?.photoURL ? (
             <img src={profile.photoURL} alt="Tu foto de perfil" className="h-16 w-16 rounded-full object-cover" referrerPolicy="no-referrer" />

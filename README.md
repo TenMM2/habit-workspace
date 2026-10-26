@@ -17,8 +17,8 @@
 ![PWA](https://img.shields.io/badge/PWA-offline-5A0FC8?logo=pwa&logoColor=white)
 ![Electron](https://img.shields.io/badge/Electron-45-47848F?logo=electron&logoColor=white)
 ![Capacitor](https://img.shields.io/badge/Capacitor-8-119EFF?logo=capacitor&logoColor=white)
-![Unit tests](https://img.shields.io/badge/unit%20tests-35%20passing-brightgreen)
-![E2E](https://img.shields.io/badge/E2E%20checks-114%20passing-brightgreen)
+![Unit tests](https://img.shields.io/badge/unit%20tests-49%20passing-brightgreen)
+![E2E](https://img.shields.io/badge/E2E%20checks-138%20passing-brightgreen)
 
 [Security](SECURITY.md) · [Multiplatform guide](docs/MULTIPLATAFORMA.md) · [Thesis (ES)](docs/MEMORIA_TFG.md) · [Defense guide (ES)](docs/GUIA_DEFENSA.md)
 
@@ -63,6 +63,7 @@ startup. Full diagrams (architecture, data model, auth and AI flows) are in the 
 - **Dynamic habit pages** — inline-editable banner (gallery, URL or compressed upload), overlapping avatar, title, quote and rules.
 - **Monthly tracker with no horizontal scroll** — a CSS grid (`minmax(0, 1fr)`) that fits any viewport, including phones; one-tap check-ins, per-day notes and filters.
 - **Dashboard & calendar** — streak, today's habits, weekly completion rate, monthly calendar, `Ctrl + K` quick search.
+- **Onboarding & interactive product tour** — a "First steps" checklist on the dashboard (7 steps that complete themselves when the user performs the real action, persisted in IndexedDB, hideable and resettable) plus a dependency-free spotlight tour (`<OnboardingTour />`) with floating popovers that highlight the real UI element, navigate across screens, adapt to mobile and support keyboard control. Auto-launches once for new accounts.
 - **Context-aware AI assistant (Gemini 3.5 Flash)** — receives a compact summary of the last 30 days, answers weekly summaries and "what am I failing?" questions, and proposes new pages. **Hardened against prompt injection**: user data is fenced as *data, not instructions*, model output is schema-validated, and nothing is created without explicit user confirmation.
 - **Graceful degradation** — if the API key, PHP, quota or network is unavailable, a deterministic local fallback assistant takes over.
 - **Accounts & plans** — profile, avatar, default banner, email/password changes, simulated Free/Pro plans with usage and billing history.
@@ -75,13 +76,14 @@ startup. Full diagrams (architecture, data model, auth and AI flows) are in the 
 |---|---|---|
 | Strict type-check | `tsc --noEmit` | ✅ no errors |
 | Production build | `vite build` | ✅ (≈1.0 MB JS · 268 KB gzipped) |
-| Unit / integration | Vitest + fake-indexeddb | ✅ **35 / 35** |
+| Unit / integration | Vitest + fake-indexeddb | ✅ **49 / 49** |
 | E2E — web (Chrome) | Playwright | ✅ **23 / 23** |
 | E2E — full QA audit (8 areas: auth, navigation, dashboard, pages, calendar, plans, AI assistant, race conditions) | Playwright | ✅ **64 / 64** |
+| E2E — onboarding checklist & interactive product tour | Playwright | ✅ **23 / 23** |
 | E2E — PWA installability & **offline mode** | Playwright + CDP | ✅ **11 / 11** |
-| E2E — Electron (also against the packaged `.exe`) | Playwright `_electron` | ✅ **16 / 16** |
+| E2E — Electron (also against the packaged `.exe`) | Playwright `_electron` | ✅ **17 / 17** |
 
-That is **35 unit tests + 114 E2E checks (149 in total)** across Web, PWA and Electron. The QA audit surfaced and fixed real defects, including a double-click race condition that created duplicate pages and could bypass the Free-plan limit. Beyond passing, the tests were verified to *catch regressions*: the brute-force
+That is **49 unit tests + 138 E2E checks (187 in total)** across Web, PWA and Electron. The QA audit surfaced and fixed real defects, including a double-click race condition that created duplicate pages and could bypass the Free-plan limit. Beyond passing, the tests were verified to *catch regressions*: the brute-force
 lockout and the cross-user isolation were deliberately broken, and the corresponding tests failed.
 
 ## Getting started
@@ -142,11 +144,12 @@ npm run cap:android     # build + sync + open Android Studio (requires the Andro
 ### Tests
 
 ```bash
-npm test                  # 35 unit tests
+npm test                  # 49 unit tests
 node e2e/run.mjs          # 23 web checks   (with `npm run dev` running)
 node e2e/auditoria.mjs    # 64-check QA audit (with `npm run dev` running; ~4 min)
+node e2e/onboarding.mjs  # 23 onboarding & guided-tour checks (with `npm run dev` running)
 node e2e/pwa.mjs          # 11 PWA checks   (with `npm run preview` running)
-node e2e/electron.mjs     # 16 Electron checks
+node e2e/electron.mjs     # 17 Electron checks
 ```
 
 ## Project structure

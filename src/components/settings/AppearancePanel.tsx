@@ -1,8 +1,16 @@
 import { Moon, Sun } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useData } from '../../context/DataContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useTour } from '../../context/TourContext';
+import { guardarOnboarding } from '../../lib/onboarding';
 
 export default function AppearancePanel() {
   const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
+  const { profile } = useData();
+  const tour = useTour();
+  const onb = profile?.onboarding;
   const opcion = (valor: 'dark' | 'light', etiqueta: string, icono: JSX.Element) => (
     <button
       type="button"
@@ -24,6 +32,15 @@ export default function AppearancePanel() {
         {opcion('light', 'Claro (Sol)', <Sun size={22} />)}
       </div>
       <p className="text-sm text-muted">También puedes cambiarlo en cualquier momento con el icono de la barra superior.</p>
+      <h3 className="mt-4 font-semibold">Tutorial</h3>
+      <div className="flex flex-wrap gap-2">
+        <button type="button" className="btn" onClick={() => tour.iniciar()}>
+          Ver tutorial de la app
+        </button>
+        <button type="button" className="btn" disabled={!onb?.oculto} onClick={() => user && onb && void guardarOnboarding(user.uid, { ...onb, oculto: false })}>
+          Mostrar primeros pasos
+        </button>
+      </div>
       {window.desktop && (
         <p className="mt-2 rounded-md border border-line p-3 text-sm text-muted" data-testid="info-escritorio">
           Aplicación de escritorio · {window.desktop.platform} · Electron {window.desktop.versions.electron} · Chrome{' '}

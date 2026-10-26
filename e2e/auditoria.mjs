@@ -4,7 +4,7 @@ import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 
-const BASE = process.env.BASE ?? 'http://localhost:5173';
+const BASE = process.env.BASE_URL ?? process.env.BASE ?? 'http://localhost:5173';
 const SHOTS = fileURLToPath(new URL('./capturas', import.meta.url));
 mkdirSync(SHOTS, { recursive: true });
 
@@ -162,6 +162,7 @@ await t('Registro correcto → entra con espacio limpio (0 páginas, sin NaN)', 
   await page.getByLabel('Correo').fill(EMAIL);
   await page.getByRole('button', { name: 'Crear cuenta' }).click();
   await page.getByText('Aún no tienes páginas').waitFor();
+  await page.keyboard.press('Escape'); // cierra el tour guiado que se lanza solo en cuentas nuevas
   await page.getByText('0/0').waitFor();
   await sinBasura();
   const t0 = await textoPagina();
@@ -603,6 +604,7 @@ await t('Free: la 4.ª página abre el aviso/modal del límite (sin crearla)', a
   await page.getByLabel('Repite la contraseña').fill(CLAVE);
   await page.getByRole('button', { name: 'Crear cuenta' }).click();
   await page.getByText('Aún no tienes páginas').waitFor();
+  await page.keyboard.press('Escape'); // cierra el tour guiado que se lanza solo en cuentas nuevas
   const nueva = page.locator('aside').first().getByRole('button', { name: 'Añadir nueva página' }).first();
   for (let i = 0; i < 3; i++) {
     await nueva.click();
@@ -833,6 +835,7 @@ await t('Triple clic en «Añadir nueva página» crea UNA sola página', async 
   await page.getByLabel('Repite la contraseña').fill(CLAVE);
   await page.getByRole('button', { name: 'Crear cuenta' }).click();
   await page.getByText('Aún no tienes páginas').waitFor();
+  await page.keyboard.press('Escape'); // cierra el tour guiado que se lanza solo en cuentas nuevas
   await page.getByRole('button', { name: 'Crear mi primera página' }).click({ clickCount: 3, delay: 10 });
   await page.waitForURL('**/p/*');
   await page.waitForTimeout(1200);
@@ -891,6 +894,7 @@ await t('Fuerza bruta: 5 fallos bloquean la cuenta; incluso la clave correcta se
   await page.getByLabel('Repite la contraseña').fill(CLAVE);
   await page.getByRole('button', { name: 'Crear cuenta' }).click();
   await page.getByText('Aún no tienes páginas').waitFor();
+  await page.keyboard.press('Escape'); // cierra el tour guiado que se lanza solo en cuentas nuevas
   await cerrarSesion();
   const intento = async (clave) => {
     await page.getByLabel('Correo').fill(mail);

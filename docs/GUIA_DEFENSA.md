@@ -60,6 +60,7 @@ if ($env:GEMINI_API_KEY) { "clave OK" } else { "sin clave -> el asistente usara 
 
 | Síntoma | Qué hacer | Qué decir |
 |---|---|---|
+| Quieres enseñar el onboarding | Dashboard (cuenta demo) → «Primeros pasos» ya tiene pasos mezclados. Pulsa **Iniciar tour guiado** (→ para avanzar, Esc para salir) o **Hacerlo** en un paso. **Reiniciar pasos** lo deja todo pendiente | «Es un tour propio, sin librerías: ilumina el elemento real y los pasos se completan solos cuando hago la acción de verdad» |
 | `php` no se reconoce | Abre una terminal nueva; si persiste, ignora el proxy | «El asistente tiene modo de respaldo: sin proxy sigue funcionando» |
 | Asistente en «Modo respaldo» | Sigue con la demo | «Hemos agotado la cuota gratuita de Gemini. Es justo el caso que cubre el respaldo, y lo probé en los tests» |
 | No hay Internet | Sigue: todo es local | «Es una app offline-first: los datos viven en el dispositivo» |
@@ -82,7 +83,7 @@ Habla **mirando al tribunal**, no a la pantalla. Lo que va en *cursiva* es lo qu
 | **6:00–8:00** | **4. El asistente de IA** | Abre el botón flotante. Pregunta «Resumen semanal» (usa tus datos). Luego «Crea una página de inglés» → botón «Crear esta página» → se abre la página nueva. | *«El asistente conoce mis hábitos de los últimos 30 días. La clave de Gemini no está en el navegador: pasa por un proxy en PHP. Si no hay IA, hay modo de respaldo. Y cuando propone una página, la valido y la creo solo si yo confirmo.»* |
 | **8:00–9:30** | **5. Ajustes y planes** | Ajustes → nombre → Apariencia → Planes: «Mejorar a Pro» → aparece la factura. | *«Los planes están simulados: cambia un campo y genera una factura de prueba. En producción haría falta una pasarela real y validación en servidor; está en las líneas futuras.»* |
 | **9:30–11:30** | **6. Arquitectura** | Muestra el diagrama de arquitectura (`docs\diagramas`). | *«Una única interfaz `Backend` con dos implementaciones intercambiables. La interfaz no sabe dónde están los datos. Esto me permitió probarlo todo sin depender de un servicio externo.»* |
-| **11:30–13:30** | **7. Seguridad y pruebas** | En el navegador abre DevTools → Red: enseña que en la petición del asistente **no hay ninguna clave**. Muestra el terminal con `npm test` (35 en verde). | *«Aislamiento por usuario, contraseñas con PBKDF2, bloqueo por fuerza bruta, validación de lo que devuelve la IA. 35 tests unitarios y 114 comprobaciones en navegador real. Además hice pruebas de mutación: rompí la seguridad a propósito y los tests fallaron.»* |
+| **11:30–13:30** | **7. Seguridad y pruebas** | En el navegador abre DevTools → Red: enseña que en la petición del asistente **no hay ninguna clave**. Muestra el terminal con `npm test` (49 en verde). | *«Aislamiento por usuario, contraseñas con PBKDF2, bloqueo por fuerza bruta, validación de lo que devuelve la IA. 49 tests unitarios y 138 comprobaciones en navegador real. Además hice pruebas de mutación: rompí la seguridad a propósito y los tests fallaron.»* |
 | **13:30–14:30** | **8. Multiplataforma** | (a) Navegador en `localhost:4173`: icono de **instalar** en la barra; activa *Sin conexión* en DevTools y recarga: sigue funcionando. (b) Muestra la ventana de escritorio y **Ajustes → Apariencia** («Aplicación de escritorio · Electron 45»). (c) Abre la carpeta `android\`. | *«La misma app es una PWA instalable que funciona sin conexión, un programa de Windows con Electron —con aislamiento de contexto, sin Node en la web y CSP estricta— y tiene la estructura de Capacitor lista para extenderla a Android. El canal móvil que entrego es la PWA; el APK de tienda sería la fase de despliegue móvil.»* |
 | **14:30–15:00** | **9. Cierre** | Vuelve al panel. | *«Cumplo los objetivos: una aplicación completa, segura y probada, con un enfoque Local-First y unos límites de alcance que he documentado: el límite del plan Free solo está en la interfaz, y los adaptadores cloud —Firebase y el APK— quedan como fase de despliegue. Líneas futuras: …. Gracias, quedo a su disposición.»* |
 
@@ -187,8 +188,8 @@ Habla **mirando al tribunal**, no a la pantalla. Lo que va en *cursiva* es lo qu
 
 ### 10. «¿Qué pruebas has hecho de verdad y qué NO cubren?»
 
-> *Tengo **35 pruebas unitarias** y **114 comprobaciones en navegador real**: 23 de la web en Chrome, 64 de una auditoría QA que recorre las 8 áreas de la aplicación, 11 de la PWA —incluida la instalabilidad según Chrome y el uso
-> sin conexión— y 16 de Electron, que ejecuto también contra el `.exe` empaquetado. Todas pasan. Algo de lo que estoy orgulloso: las pruebas de
+> *Tengo **49 pruebas unitarias** y **138 comprobaciones en navegador real**: 23 de la web en Chrome, 64 de una auditoría QA que recorre las 8 áreas de la aplicación, 23 del onboarding y el tour guiado, 11 de la PWA —incluida la instalabilidad según Chrome y el uso
+> sin conexión— y 17 de Electron, que ejecuto también contra el `.exe` empaquetado. Todas pasan. Algo de lo que estoy orgulloso: las pruebas de
 > navegador me encontraron **errores reales** que los unitarios no vieron —una redirección al recargar una página, un avatar tapado por el banner, y en la auditoría
 > final una condición de carrera que duplicaba páginas con un doble clic y que podía saltarse el límite del plan gratuito—, y los corregí.
 > También hice pruebas de mutación para comprobar que los tests detectan fallos.*

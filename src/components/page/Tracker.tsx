@@ -94,7 +94,7 @@ export default function Tracker({ uid, page, onChange }: Props) {
             <option value="pendientes">Pendientes</option>
             <option value="completos">Completos</option>
           </select>
-          <button type="button" className="btn !py-1 text-xs" aria-expanded={gestionando} onClick={() => setGestionando((g) => !g)}>
+          <button type="button" className="btn !py-1 text-xs" data-tour="habitos-btn" aria-expanded={gestionando} onClick={() => setGestionando((g) => !g)}>
             <Settings2 size={14} /> Hábitos
           </button>
         </div>
@@ -157,7 +157,7 @@ export default function Tracker({ uid, page, onChange }: Props) {
       {n === 0 ? (
         <p className="py-8 text-center text-muted">Esta página no tiene hábitos. Pulsa «Hábitos» para añadir el primero.</p>
       ) : (
-        <div role="table" aria-label="Seguimiento diario" style={{ '--n': n } as React.CSSProperties}>
+        <div role="table" aria-label="Seguimiento diario" data-tour="tabla" style={{ '--n': n } as React.CSSProperties}>
           {/* Cabecera */}
           <div role="row" className={`grid ${COLUMNAS} items-end gap-1 border-b border-line pb-1 text-center text-xs text-muted`}>
             <div role="columnheader" className="text-left">Día</div>

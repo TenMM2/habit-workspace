@@ -9,6 +9,7 @@ import { preguntarAsistente, type Mensaje } from '../lib/assistant';
 import { DEFAULT_BANNER } from '../lib/banners';
 import { todayISO } from '../lib/dates';
 import { crearPaginaCon, nuevoId } from '../lib/db';
+import { marcarPaso } from '../lib/onboarding';
 import type { PaginaPropuesta } from '../lib/paginaPropuesta';
 import { FREE_PAGE_LIMIT } from '../types';
 
@@ -74,6 +75,7 @@ export default function AssistantWidget({ abierto, onAbrir, onNecesitaPlan }: Pr
   async function enviar(pregunta: string) {
     const limpia = pregunta.trim();
     if (!limpia || pensando) return;
+    if (user) marcarPaso(user.uid, 'asistente');
     const nueva: Burbuja = { id: ++contador.current, rol: 'user', texto: limpia.slice(0, 2000) };
     const historial = [...mensajes, nueva];
     setMensajes(historial);
@@ -119,6 +121,7 @@ export default function AssistantWidget({ abierto, onAbrir, onNecesitaPlan }: Pr
         <section
           role="dialog"
           aria-label="Asistente IA"
+          data-tour="asistente-panel"
           className="fixed bottom-20 right-4 z-40 flex h-[min(34rem,calc(100vh-7rem))] w-[min(24rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-xl border border-line bg-app shadow-2xl"
         >
           <header className="flex items-center gap-2 border-b border-line px-3 py-2">

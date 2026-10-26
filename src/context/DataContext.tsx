@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { backend } from '../backend';
 import { useAuth } from './AuthContext';
+import { sincronizarOnboarding } from '../lib/onboarding';
 import type { HabitPage, Plan, Profile } from '../types';
 
 interface DataContextValue {
@@ -53,6 +54,10 @@ export function DataProvider({ children }: { children: ReactNode }) {
       offPages();
     };
   }, [uid]);
+
+  useEffect(() => {
+    sincronizarOnboarding(uid, profile?.onboarding);
+  }, [uid, profile?.onboarding]);
 
   const value = useMemo<DataContextValue>(
     () => ({ profile, plan: profile?.plan ?? 'free', pages, loading, error }),

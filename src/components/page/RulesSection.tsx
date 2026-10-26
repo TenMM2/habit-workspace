@@ -13,7 +13,7 @@ export default function RulesSection({ page, onChange }: Props) {
   const guardarReglas = (reglas: string[]) => void onChange({ rules: reglas });
 
   return (
-    <section className="grid gap-6" aria-label="Mentalidad y reglas">
+    <section className="grid gap-6" aria-label="Mentalidad y reglas" data-tour="reglas">
       <blockquote className="border-l-4 border-accent pl-3">
         <EditableText
           ariaLabel="Cita motivacional"

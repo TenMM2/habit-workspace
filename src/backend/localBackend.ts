@@ -96,6 +96,7 @@ export function crearLocalBackend(opciones: Opciones = {}): Backend & { ready: P
     bannerURL: u.bannerURL,
     plan: u.plan,
     billing: u.billing,
+    onboarding: u.onboarding,
   });
   const aPagina = (p: LocalPage): HabitPage => ({
     id: p.id,
@@ -142,6 +143,8 @@ export function crearLocalBackend(opciones: Opciones = {}): Backend & { ready: P
       bannerURL: null,
       plan: 'free',
       billing: [],
+      // La demo arranca con pasos mezclados (hechos y pendientes) para poder enseñar el panel en la defensa
+      onboarding: { pasos: ['pagina', 'reglas', 'habitos'], oculto: false, tourVisto: true },
       passwordHash: await hashPassword(DEMO_PASSWORD),
       createdAt: Date.now(),
     };
@@ -215,6 +218,7 @@ export function crearLocalBackend(opciones: Opciones = {}): Backend & { ready: P
           bannerURL: null,
           plan: 'free',
           billing: [],
+          onboarding: { pasos: [], oculto: false, tourVisto: false }, // cuenta nueva: el tour se lanza solo la primera vez
           passwordHash: await hashPassword(password),
           createdAt: Date.now(),
         };
@@ -302,6 +306,16 @@ export function crearLocalBackend(opciones: Opciones = {}): Backend & { ready: P
         if (changes.displayName !== undefined && (changes.displayName.trim().length < 1 || changes.displayName.length > 80))
           throw new BackendError('invalid-argument');
         if (changes.plan !== undefined && !(['free', 'pro'] as Plan[]).includes(changes.plan)) throw new BackendError('invalid-argument');
+        const o = changes.onboarding;
+        if (
+          o !== undefined &&
+          (!Array.isArray(o.pasos) ||
+            o.pasos.length > 20 ||
+            o.pasos.some((p) => typeof p !== 'string' || p.length > 30) ||
+            typeof o.oculto !== 'boolean' ||
+            typeof o.tourVisto !== 'boolean')
+        )
+          throw new BackendError('invalid-argument');
         await store.put('users', uid, { ...u, ...changes });
         notificar('profile');
         notificar('session');

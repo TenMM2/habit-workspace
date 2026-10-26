@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { PanelLeft } from 'lucide-react';
 import Sidebar from './Sidebar';
 import SearchModal from './SearchModal';
 import SettingsModal, { type PestanaAjustes } from './SettingsModal';
 import AssistantWidget from './AssistantWidget';
 import ThemeToggle from './ThemeToggle';
+import OnboardingTour from './OnboardingTour';
+import { TourContext } from '../context/TourContext';
+import { guardarOnboarding, inferirPasos, PASOS, type PasoId } from '../lib/onboarding';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { DEFAULT_BANNER } from '../lib/banners';
@@ -24,8 +27,9 @@ function leerColapsada(): boolean {
 
 export default function Layout() {
   const { user } = useAuth();
-  const { pages, plan, profile, error } = useData();
+  const { pages, plan, profile, error, loading } = useData();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [colapsada, setColapsada] = useState(leerColapsada); // escritorio
   const [cajon, setCajon] = useState(false); // móvil / tablet
@@ -34,6 +38,10 @@ export default function Layout() {
   const [asistente, setAsistente] = useState(false);
   const [avisoLimite, setAvisoLimite] = useState(false);
   const creando = useRef(false); // evita páginas duplicadas (y saltarse el límite Free) con clics rápidos
+  const [ajustesKey, setAjustesKey] = useState(0); // fuerza un modal nuevo (pestaña inicial correcta) cada vez que se abre
+  const [tour, setTour] = useState<number | null>(null); // índice del paso del tour guiado, o null si está cerrado
+  const abiertoPorTour = useRef(false);
+  const autoLanzado = useRef(false);
 
   useEffect(() => {
     try {
@@ -57,6 +65,7 @@ export default function Layout() {
 
   const abrirAjustes = useCallback((pestana: PestanaAjustes, limite = false) => {
     setAvisoLimite(limite);
+    setAjustesKey((k) => k + 1);
     setAjustes(pestana);
   }, []);
 
@@ -79,6 +88,88 @@ export default function Layout() {
     }
   }, [user, plan, pages.length, profile?.bannerURL, navigate, abrirAjustes]);
 
+  // ── Onboarding ────────────────────────────────────────────────────────────────────────────────────
+  // Cuentas anteriores a esta función: se deducen los pasos ya cumplidos y no se lanza el tour solo
+  useEffect(() => {
+    if (!user || !profile || loading || profile.onboarding) return;
+    void guardarOnboarding(user.uid, { pasos: inferirPasos(profile, pages), oculto: false, tourVisto: true }).catch(() => undefined);
+  }, [user, profile, loading, pages]);
+
+  // Cuenta nueva: el tour se lanza solo la primera vez
+  useEffect(() => {
+    const o = profile?.onboarding;
+    if (user && o && !o.tourVisto && !autoLanzado.current && tour === null && !loading) {
+      autoLanzado.current = true;
+      setTour(0);
+      // Se da por visto al lanzarlo, no al cerrarlo: así no reaparece aunque se recargue la página con el tour abierto
+      void guardarOnboarding(user.uid, { ...o, tourVisto: true }).catch(() => undefined);
+    }
+  }, [user, profile?.onboarding, loading, tour]);
+
+  const primeraPagina = pages[0]?.id;
+  const pasoActual = tour === null ? null : PASOS[tour];
+  /** Dónde está el elemento que ilumina cada paso (con alternativa si aún no hay páginas). */
+  const destino = useMemo(() => {
+    if (!pasoActual) return null;
+    const pagina = (selector: string) =>
+      primeraPagina ? { ruta: `/p/${primeraPagina}`, selector } : { ruta: null, selector: '[data-tour="nueva-pagina"]' };
+    switch (pasoActual.id) {
+      case 'perfil':
+        return { ruta: null, selector: '[data-tour="perfil-foto"]' };
+      case 'pagina':
+        return pagina('[data-tour="cabecera"]');
+      case 'reglas':
+        return pagina('[data-tour="reglas"]');
+      case 'habitos':
+        return pagina('[data-tour="habitos-btn"]');
+      case 'marca':
+        return pagina('[data-tour="tabla"]');
+      case 'calendario':
+        return { ruta: '/calendario', selector: '[data-tour="calendario-grid"]' };
+      case 'asistente':
+        return { ruta: null, selector: '[data-tour="asistente-panel"]' };
+    }
+  }, [pasoActual, primeraPagina]);
+
+  // Prepara la pantalla de cada paso: abre/cierra el modal o el asistente y navega a la ruta del paso
+  useEffect(() => {
+    if (tour === null || !destino || !pasoActual) return;
+    if (pasoActual.id === 'perfil') {
+      abrirAjustes('cuenta');
+      abiertoPorTour.current = true;
+    } else if (abiertoPorTour.current) {
+      setAjustes(null);
+      abiertoPorTour.current = false;
+    }
+    if (pasoActual.id === 'asistente') setAsistente(true);
+    setCajon(false);
+    if (destino.ruta && location.pathname !== destino.ruta) navigate(destino.ruta);
+    // La ruta actual no es dependencia a propósito: solo se navega al cambiar de paso, no cada vez que el usuario se mueve
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tour, destino?.ruta]);
+
+  const cerrarTour = useCallback(() => {
+    setTour(null);
+    if (abiertoPorTour.current) {
+      setAjustes(null);
+      abiertoPorTour.current = false;
+    }
+    const o = profile?.onboarding;
+    if (user && o && !o.tourVisto) void guardarOnboarding(user.uid, { ...o, tourVisto: true }).catch(() => undefined);
+  }, [user, profile?.onboarding]);
+
+  const hacerPaso = useCallback(
+    async (id: PasoId) => {
+      if (id === 'pagina' && pages.length === 0) await nuevaPagina();
+      setTour(PASOS.findIndex((p) => p.id === id));
+    },
+    [pages.length, nuevaPagina]
+  );
+  const control = useMemo(
+    () => ({ iniciar: () => setTour(0), hacer: (id: PasoId) => void hacerPaso(id), activo: tour !== null }),
+    [hacerPaso, tour]
+  );
+
   const cerrarCajon = () => setCajon(false);
   /** Acciones de la barra lateral; en móvil primero se cierra el cajón. */
   const accion = (fn: () => void) => () => {
@@ -94,10 +185,12 @@ export default function Layout() {
       onUpgrade={accion(() => abrirAjustes('plan'))}
       onAssistant={accion(() => setAsistente(true))}
       onSettings={accion(() => abrirAjustes('cuenta'))}
+      onTour={accion(() => setTour(0))}
     />
   );
 
   return (
+    <TourContext.Provider value={control}>
     <div className="flex h-screen overflow-hidden">
       {/* Escritorio */}
       {!colapsada && (
@@ -144,8 +237,21 @@ export default function Layout() {
       </div>
 
       {buscando && <SearchModal onClose={() => setBuscando(false)} />}
-      {ajustes && <SettingsModal inicial={ajustes} avisoLimite={avisoLimite} onClose={() => setAjustes(null)} />}
+      {ajustes && <SettingsModal key={ajustesKey} inicial={ajustes} avisoLimite={avisoLimite} onClose={() => setAjustes(null)} />}
       <AssistantWidget abierto={asistente} onAbrir={setAsistente} onNecesitaPlan={() => abrirAjustes('plan', true)} />
+      {tour !== null && pasoActual && destino && (
+        <OnboardingTour
+          indice={tour}
+          total={PASOS.length}
+          titulo={pasoActual.titulo}
+          texto={pasoActual.tourTexto}
+          selector={destino.selector}
+          onAnterior={() => setTour((i) => (i === null ? i : Math.max(0, i - 1)))}
+          onSiguiente={() => setTour((i) => (i === null ? i : Math.min(PASOS.length - 1, i + 1)))}
+          onCerrar={cerrarTour}
+        />
+      )}
     </div>
+    </TourContext.Provider>
   );
 }

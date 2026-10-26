@@ -116,6 +116,17 @@ await paso('Entrar con la cuenta demo y ver el dashboard', async () => {
   await page.getByText('días de racha').waitFor({ timeout: 10000 });
 });
 
+await paso('Onboarding en escritorio: panel «Primeros pasos» y tour guiado con ventanita y foco', async () => {
+  await page.getByRole('region', { name: 'Primeros pasos' }).waitFor({ timeout: 10000 });
+  await page.getByRole('button', { name: 'Iniciar tour guiado' }).click({ noWaitAfter: true });
+  const t = page.getByRole('dialog', { name: 'Tour guiado' });
+  await t.getByText('Paso 1 de 7').waitFor();
+  await page.locator('[data-testid="tour-foco"]').waitFor();
+  await page.keyboard.press('Escape');
+  await t.waitFor({ state: 'detached' });
+  await page.keyboard.press('Escape'); // por si el modal de Ajustes seguía abierto
+});
+
 await paso('Abrir una página de hábitos y marcar un hábito de hoy', async () => {
   await page.locator('main').getByRole('link', { name: 'Mi rutina diaria' }).click({ noWaitAfter: true });
   await page.getByRole('table', { name: 'Seguimiento diario' }).waitFor();

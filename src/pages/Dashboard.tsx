@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Flame, Layers, Plus, Target, TrendingUp } from 'lucide-react';
+import FirstSteps from '../components/FirstSteps';
 import { useAuth } from '../context/AuthContext';
 import { useData } from '../context/DataContext';
 import { useAllDays } from '../hooks/useDays';
@@ -52,11 +53,13 @@ export default function Dashboard({ onNewPage }: Props) {
         ))}
       </div>
 
+      <FirstSteps />
+
       <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">Hoy</h2>
       {pages.length === 0 ? (
         <div className="rounded-lg border border-dashed border-line p-10 text-center">
           <p className="mb-4 text-muted">Aún no tienes páginas. Crea la primera para empezar a registrar hábitos.</p>
-          <button type="button" className="btn btn-primary" onClick={onNewPage}>
+          <button type="button" className="btn btn-primary" onClick={onNewPage} data-tour="nueva-pagina">
             <Plus size={16} /> Crear mi primera página
           </button>
         </div>

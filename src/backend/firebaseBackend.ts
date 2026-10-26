@@ -30,7 +30,7 @@ import {
 } from 'firebase/firestore';
 import { auth, db, googleProvider } from '../lib/firebase';
 import { nuevoId } from '../lib/ids';
-import type { AppUser, DayEntry, HabitPage, Profile } from '../types';
+import type { AppUser, DayEntry, HabitPage, Onboarding, Profile } from '../types';
 import { BackendError, type Backend } from './types';
 
 // Estructura:  users/{uid}/pages/{pageId}   y   users/{uid}/pages/{pageId}/days/{YYYY-MM-DD}
@@ -56,8 +56,19 @@ async function asegurarPerfil(user: User, nombre?: string): Promise<void> {
     bannerURL: null,
     plan: 'free',
     billing: [],
+    onboarding: { pasos: [], oculto: false, tourVisto: false },
     createdAt: serverTimestamp(),
   });
+}
+
+function aOnboarding(x: unknown): Onboarding | undefined {
+  if (!x || typeof x !== 'object') return undefined;
+  const o = x as Record<string, unknown>;
+  return {
+    pasos: Array.isArray(o.pasos) ? o.pasos.filter((p): p is string => typeof p === 'string') : [],
+    oculto: o.oculto === true,
+    tourVisto: o.tourVisto === true,
+  };
 }
 
 function usuarioActual(): User {
@@ -139,6 +150,7 @@ export const firebaseBackend: Backend = {
             bannerURL: x.bannerURL ?? null,
             plan: x.plan === 'pro' ? 'pro' : 'free',
             billing: Array.isArray(x.billing) ? x.billing : [],
+            onboarding: aOnboarding(x.onboarding),
           } satisfies Profile);
         },
         onError

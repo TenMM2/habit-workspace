@@ -5,7 +5,7 @@ import { mkdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 
-const BASE = 'http://localhost:5173';
+const BASE = process.env.BASE_URL ?? 'http://localhost:5173';
 const SHOTS = fileURLToPath(new URL('./capturas', import.meta.url));
 mkdirSync(SHOTS, { recursive: true });
 const resultados = [];
@@ -221,6 +221,7 @@ await paso('Registro de un usuario nuevo y aislamiento: no ve las páginas del d
   await page.getByLabel('Repite la contraseña').fill('secreto123');
   await page.getByRole('button', { name: 'Crear cuenta' }).click();
   await page.getByText('Aún no tienes páginas').waitFor();
+  await page.keyboard.press('Escape'); // cierra el tour guiado que se lanza solo en cuentas nuevas
   const visibles = await page.locator('aside').first().getByText('Rutina editada').count();
   if (visibles) throw new Error('¡ve páginas de otro usuario!');
 });
