@@ -1,4 +1,4 @@
-package es.tfg.habitworkspace;
+package dev.tenmm2.habitworkspace;
 
 import com.getcapacitor.BridgeActivity;
 

@@ -12,7 +12,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const apiLocal = process.env.CAP_LOCAL_API === '1';
 
 const config: CapacitorConfig = {
-  appId: 'es.tfg.habitworkspace',
+  appId: 'dev.tenmm2.habitworkspace',
   appName: 'Habit Workspace',
   webDir: 'dist',
   backgroundColor: '#191919',

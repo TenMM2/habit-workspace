@@ -83,7 +83,7 @@ export default function PlansPanel({ avisoLimite = false }: { avisoLimite?: bool
           {tarjeta('pro', 'Pro', `${formatoEuros(PRECIO_PRO)}/mes`, PRO)}
         </div>
         <Estado estado={accion.estado} />
-        <p className="text-xs text-muted">Simulación para el TFG: no se realiza ningún cobro real.</p>
+        <p className="text-xs text-muted">Simulación: no se realiza ningún cobro real.</p>
       </section>
 
       <section className="grid gap-3">

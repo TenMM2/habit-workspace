@@ -8,3 +8,8 @@ api/config.php
 api/cacert.pem
 e2e/capturas
 /release/
+
+# Documentación académica: se queda solo en local
+docs/MEMORIA_TFG.*
+docs/GUIA_DEFENSA.md
+docs/diagramas/planificacion.*

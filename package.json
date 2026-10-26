@@ -3,7 +3,7 @@
   "productName": "Habit Workspace",
   "private": true,
   "version": "1.0.0",
-  "description": "Habit Workspace: plataforma de seguimiento de hábitos con asistente IA (TFG DAW/DAM)",
+  "description": "Habit Workspace: plataforma de seguimiento de hábitos con asistente IA",
   "author": "Saúl Lázaro Casterad",
   "license": "UNLICENSED",
   "type": "module",

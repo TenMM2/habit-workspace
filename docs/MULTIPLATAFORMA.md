@@ -40,7 +40,7 @@ npm run desktop:pack     # genera release\HabitWorkspace-win32-x64\HabitWorkspac
 - **Datos:** la app de escritorio guarda los suyos en su propio perfil (`%APPDATA%\Habit Workspace`), independientes de los del navegador.
 - **`ELECTRON_RUN_AS_NODE`:** algunos editores la definen y Electron arranca como Node (error `registerSchemesAsPrivileged`). El lanzador `lanzar-electron.mjs` la elimina; si ejecutas Electron a mano, hazlo desde una terminal sin esa variable.
 - **Seguridad:** ver el apartado 8.2 de la memoria (aislamiento de contexto, sandbox, protocolo `app://`, CSP, navegación y permisos restringidos).
-- **Para distribuir en serio** haría falta un instalador firmado (p. ej. `electron-builder`) y un icono `.ico`; fuera del alcance de este TFG.
+- **Para distribuir en serio** haría falta un instalador firmado (p. ej. `electron-builder`) y un icono `.ico`; fuera del alcance de este proyecto.
 
 ## 3 · Capacitor (Android / iOS)
 

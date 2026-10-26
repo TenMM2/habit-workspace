@@ -2,7 +2,7 @@
 
 # ✅ Habit Workspace
 
-**A full-stack, multiplatform habit tracker & workspace with a context-aware AI assistant**
+**An individual project to help people build and sustain habits: a full-stack, multiplatform habit tracker & workspace with a context-aware AI assistant**
 
 *Local-First · Offline-First · Web · PWA · Desktop · Mobile*
 
@@ -20,7 +20,7 @@
 ![Unit tests](https://img.shields.io/badge/unit%20tests-49%20passing-brightgreen)
 ![E2E](https://img.shields.io/badge/E2E%20checks-138%20passing-brightgreen)
 
-[Security](SECURITY.md) · [Multiplatform guide](docs/MULTIPLATAFORMA.md) · [Thesis (ES)](docs/MEMORIA_TFG.md) · [Defense guide (ES)](docs/GUIA_DEFENSA.md)
+[Security](SECURITY.md) · [Multiplatform guide](docs/MULTIPLATAFORMA.md) · [Diagrams](docs/diagramas/)
 
 </div>
 
@@ -28,7 +28,7 @@
 
 ## Overview
 
-Habit Workspace is a habit tracker built around the simplicity of Notion and Google Tasks. Users create as many **pages** as they like — each with a
+Habit Workspace is a personal project built to help people stay consistent with their habits, with the simplicity of Notion and Google Tasks. Users create as many **pages** as they like — each with a
 banner, avatar, title, motivational quote, personal rules and a monthly tracking table — follow their streaks and completion rate on a dashboard and
 calendar, and chat with an **AI assistant** that knows their data and can propose new pages.
 
@@ -55,7 +55,7 @@ calendar, and chat with an **AI assistant** that knows their data and can propos
 ```
 
 The app talks to a **single `Backend` interface** with two interchangeable implementations — Firebase or local IndexedDB — selected automatically at
-startup. Full diagrams (architecture, data model, auth and AI flows) are in the thesis and in [`docs/diagramas/`](docs/diagramas/).
+startup. Full diagrams (architecture, data model, auth and AI flows) are in [`docs/diagramas/`](docs/diagramas/).
 
 ## Key features
 
@@ -161,19 +161,16 @@ electron/       Main process and preload (desktop)
 android/        Capacitor project
 public/         Web manifest, service worker, icons
 tests/  e2e/    Unit tests and browser tests
-docs/           Thesis, defense guide, multiplatform guide and diagrams (in Spanish)
+docs/           Multiplatform guide and architecture diagrams (in Spanish)
 scripts/        Icon generation, packaging, Electron launcher, diagram/Word export
 ```
 
 ## Documentation
 
-> **Note:** *Academic Thesis & Defense documentation inside `docs/` are written in Spanish* (this project was delivered as a Spanish university final-year thesis).
-
 | Document | Language | Content |
 |---|---|---|
-| [Thesis (Memoria del TFG)](docs/MEMORIA_TFG.md) · [Word](docs/MEMORIA_TFG.docx) | Spanish (English abstract) | Objectives, architecture, data model, security, testing, conclusions |
-| [Defense guide](docs/GUIA_DEFENSA.md) | Spanish | 15-minute script and anticipated examiner questions |
 | [Multiplatform guide](docs/MULTIPLATAFORMA.md) | Spanish | PWA, Electron and Capacitor step by step |
+| [Architecture diagrams](docs/diagramas/) | Spanish | Architecture, data model, authentication and AI flows |
 | [Security policy](SECURITY.md) | English | Implemented measures and known limitations |
 
 ## Design approach & scope
@@ -184,7 +181,7 @@ architecture** for a future cloud deployment (cross-device sync, app stores).
 
 Verified scope, stated plainly: the test suites validate the primary local mode (the AI assistant is exercised in its fallback mode; live Gemini calls are checked manually); the cloud adapters (Firebase, Android APK) have **not been validated
 against real services** in this release; **payments are simulated** and the Free-plan limit is enforced in the UI only; the PHP proxy is designed for
-local use. See [SECURITY.md](SECURITY.md) and sections 4.5 and 9 of the thesis.
+local use. See [SECURITY.md](SECURITY.md).
 
 ## Author
 

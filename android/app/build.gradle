@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "es.tfg.habitworkspace"
+    namespace = "dev.tenmm2.habitworkspace"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "es.tfg.habitworkspace"
+        applicationId "dev.tenmm2.habitworkspace"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

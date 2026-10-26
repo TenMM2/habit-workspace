@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">Habit Workspace</string>
     <string name="title_activity_main">Habit Workspace</string>
-    <string name="package_name">es.tfg.habitworkspace</string>
-    <string name="custom_url_scheme">es.tfg.habitworkspace</string>
+    <string name="package_name">dev.tenmm2.habitworkspace</string>
+    <string name="custom_url_scheme">dev.tenmm2.habitworkspace</string>
 </resources>
